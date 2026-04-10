@@ -36,9 +36,9 @@ class TCLClient:
         self,
         ligne: str,
         stop_id: int,
-        passage_type: PassageType,
+        passage_type: PassageType | None = None,
     ) -> list[Passage]:
-        """Retrieve passages for a given line, stop, and passage type."""
+        """Retrieve passages for a given line and stop, optionally filtered by type."""
         url = f"{self.BASE_URL}/tcl_sytral.tclpassagearret/all.json"
         async with self._session.get(
             url, params={"maxfeatures": "-1"}, auth=self._auth
@@ -62,7 +62,7 @@ class TCLClient:
             for v in data["values"]
             if v["ligne"] == ligne
             and v["id"] == stop_id
-            and v["type"] == passage_type
+            and (passage_type is None or v["type"] == passage_type)
         ]
         passages.sort(key=lambda p: p.heure_passage)
         return passages

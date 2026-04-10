@@ -112,6 +112,16 @@ async def test_get_passages_returns_empty_when_no_match():
 
 
 @pytest.mark.asyncio
+async def test_get_passages_without_type_returns_all_types():
+    client = _make_client_with_response(SAMPLE_API_RESPONSE)
+    passages = await client.get_passages("A", 30101)
+
+    assert len(passages) == 2
+    assert passages[0].type == PassageType.ESTIMATED
+    assert passages[1].type == PassageType.THEORETICAL
+
+
+@pytest.mark.asyncio
 async def test_get_passages_estimated_type():
     client = _make_client_with_response(SAMPLE_API_RESPONSE)
     passages = await client.get_passages("A", 30101, PassageType.ESTIMATED)
