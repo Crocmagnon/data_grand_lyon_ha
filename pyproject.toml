@@ -1,6 +1,6 @@
 [project]
 name = "transports-commun-lyon"
-version = "0.3.0"
+version = "0.3.1"
 description = "Python library to retrieve public transport data from the TCL/Sytral network in Lyon, France"
 readme = "README.md"
 license = "MIT"
@@ -11,6 +11,7 @@ authors = [
 dependencies = [
     "aiohttp>=3.11",
 ]
+
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -18,6 +19,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.14",
 ]
+
+[project.urls]
+Source = "https://codeberg.org/Crocmagnon/transports_commun_lyon"
 
 [dependency-groups]
 dev = [
