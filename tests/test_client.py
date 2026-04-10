@@ -4,7 +4,15 @@ from unittest.mock import AsyncMock, MagicMock
 import aiohttp
 import pytest
 
-from transports_commun_lyon import Passage, PassageType, TCLClient
+from transports_commun_lyon import (
+    Availability,
+    Passage,
+    PassageType,
+    StationStatus,
+    TCLClient,
+    VelovAvailability,
+    VelovStationStatus,
+)
 
 SAMPLE_API_RESPONSE = {
     "fields": ["id", "ligne", "direction", "delaipassage", "type", "heurepassage",
@@ -164,3 +172,119 @@ async def test_get_passages_sorted_by_heure_passage():
     assert passages[0].heure_passage == datetime(2026, 4, 10, 16, 5, 0)
     assert passages[1].heure_passage == datetime(2026, 4, 10, 16, 35, 0)
     assert passages[2].heure_passage == datetime(2026, 4, 10, 17, 0, 0)
+
+
+SAMPLE_VELOV_RESPONSE = {
+    "fields": [],
+    "nb_results": 2,
+    "values": [
+        {
+            "number": 15002,
+            "name": "15002 - ST PRIEST - CITE BERLIET",
+            "address": "Place Steven Spielberg",
+            "commune": "Saint-Priest",
+            "status": "OPEN",
+            "availability": "Vert",
+            "lat": 45.70597,
+            "lng": 4.900886,
+            "bike_stands": 20,
+            "available_bikes": 7,
+            "available_bike_stands": 13,
+            "banking": False,
+            "last_update": "2026-04-10 16:28:08+02:00",
+            "total_stands": {
+                "availabilities": {
+                    "bikes": 7,
+                    "electricalBikes": 3,
+                    "electricalInternalBatteryBikes": 3,
+                    "electricalRemovableBatteryBikes": 0,
+                    "mechanicalBikes": 4,
+                    "stands": 13,
+                },
+                "capacity": 20,
+            },
+        },
+        {
+            "number": 99999,
+            "name": "99999 - ANOTHER STATION",
+            "address": "Rue Exemple",
+            "commune": "Lyon",
+            "status": "CLOSED",
+            "availability": "Gris",
+            "lat": 45.75,
+            "lng": 4.85,
+            "bike_stands": 10,
+            "available_bikes": 0,
+            "available_bike_stands": 0,
+            "banking": True,
+            "last_update": "2026-04-10 15:00:00+02:00",
+            "total_stands": {
+                "availabilities": {
+                    "bikes": 0,
+                    "electricalBikes": 0,
+                    "electricalInternalBatteryBikes": 0,
+                    "electricalRemovableBatteryBikes": 0,
+                    "mechanicalBikes": 0,
+                    "stands": 0,
+                },
+                "capacity": 10,
+            },
+        },
+    ],
+}
+
+
+@pytest.mark.asyncio
+async def test_get_velov_station_found():
+    client = _make_client_with_response(SAMPLE_VELOV_RESPONSE)
+    station = await client.get_velov_station(15002)
+
+    assert station == VelovStationStatus(
+        number=15002,
+        name="15002 - ST PRIEST - CITE BERLIET",
+        address="Place Steven Spielberg",
+        commune="Saint-Priest",
+        status=StationStatus.OPEN,
+        availability=Availability.GREEN,
+        lat=45.70597,
+        lng=4.900886,
+        bike_stands=20,
+        available_bikes=7,
+        available_bike_stands=13,
+        banking=False,
+        last_update=datetime.fromisoformat("2026-04-10 16:28:08+02:00"),
+        total_stands=VelovAvailability(
+            bikes=7,
+            electrical_bikes=3,
+            electrical_internal_battery_bikes=3,
+            electrical_removable_battery_bikes=0,
+            mechanical_bikes=4,
+            stands=13,
+            capacity=20,
+        ),
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_velov_station_not_found():
+    client = _make_client_with_response(SAMPLE_VELOV_RESPONSE)
+    station = await client.get_velov_station(11111)
+    assert station is None
+
+
+@pytest.mark.asyncio
+async def test_get_velov_station_no_auth():
+    mock_response = AsyncMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.json = AsyncMock(return_value=SAMPLE_VELOV_RESPONSE)
+    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_response.__aexit__ = AsyncMock(return_value=False)
+
+    session = MagicMock(spec=aiohttp.ClientSession)
+    session.get = MagicMock(return_value=mock_response)
+
+    client = TCLClient(session, username="user", password="pass")
+    await client.get_velov_station(15002)
+
+    _, kwargs = session.get.call_args
+    assert "auth" not in kwargs

@@ -38,7 +38,7 @@ TCL_USERNAME=xxx TCL_PASSWORD=yyy uv run python contrib/playground.py
 ### Key Modules
 
 - `client.py` — `TCLClient` class: async HTTP client for the Grand Lyon data API (`https://data.grandlyon.com/fr/datapusher/ws/rdata`)
-- `models.py` — Data models: `Passage` (frozen dataclass), `PassageType` (StrEnum: T=theoretical, E=estimated)
+- `models.py` — Data models: `Passage`, `PassageType`, `VelovStationStatus`, `VelovAvailability`, `StationStatus`, `Availability`
 
 ## Conventions
 

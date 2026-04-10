@@ -4,7 +4,14 @@ from datetime import datetime
 
 import aiohttp
 
-from .models import Passage, PassageType
+from .models import (
+    Availability,
+    Passage,
+    PassageType,
+    StationStatus,
+    VelovAvailability,
+    VelovStationStatus,
+)
 
 _PASSAGE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -59,3 +66,47 @@ class TCLClient:
         ]
         passages.sort(key=lambda p: p.heure_passage)
         return passages
+
+    async def get_velov_station(
+        self, station_id: int
+    ) -> VelovStationStatus | None:
+        """Retrieve the status of a Vélo'v station by its ID."""
+        url = f"{self.BASE_URL}/jcd_jcdecaux.jcdvelov/all.json"
+        async with self._session.get(
+            url, params={"maxfeatures": "-1", "start": "1"}
+        ) as resp:
+            resp.raise_for_status()
+            data = await resp.json()
+
+        for v in data["values"]:
+            if v["number"] == station_id:
+                ts = v["total_stands"]
+                return VelovStationStatus(
+                    number=v["number"],
+                    name=v["name"],
+                    address=v["address"],
+                    commune=v["commune"],
+                    status=StationStatus(v["status"]),
+                    availability=Availability(v["availability"]),
+                    lat=v["lat"],
+                    lng=v["lng"],
+                    bike_stands=v["bike_stands"],
+                    available_bikes=v["available_bikes"],
+                    available_bike_stands=v["available_bike_stands"],
+                    banking=v["banking"],
+                    last_update=datetime.fromisoformat(v["last_update"]),
+                    total_stands=VelovAvailability(
+                        bikes=ts["availabilities"]["bikes"],
+                        electrical_bikes=ts["availabilities"]["electricalBikes"],
+                        electrical_internal_battery_bikes=ts["availabilities"][
+                            "electricalInternalBatteryBikes"
+                        ],
+                        electrical_removable_battery_bikes=ts["availabilities"][
+                            "electricalRemovableBatteryBikes"
+                        ],
+                        mechanical_bikes=ts["availabilities"]["mechanicalBikes"],
+                        stands=ts["availabilities"]["stands"],
+                        capacity=ts["capacity"],
+                    ),
+                )
+        return None

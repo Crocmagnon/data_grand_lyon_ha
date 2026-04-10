@@ -31,6 +31,20 @@ async def main() -> None:
         for p in passages:
             print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M})")
 
+        print()
+        station_id = 10044
+        print(f"=== Vélo'v station {station_id} ===")
+        station = await client.get_velov_station(station_id)
+        if station:
+            print(f"  {station.name} ({station.commune})")
+            print(f"  Status: {station.status} | Availability: {station.availability}")
+            print(f"  Bikes: {station.available_bikes}/{station.bike_stands}")
+            ts = station.total_stands
+            print(f"  Detail: {ts.mechanical_bikes} mechanical, {ts.electrical_bikes} electrical")
+            print(f"  Free stands: {station.available_bike_stands}")
+        else:
+            print(f"  Station {station_id} not found")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
