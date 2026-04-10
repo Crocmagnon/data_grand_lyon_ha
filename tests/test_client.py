@@ -174,6 +174,25 @@ async def test_get_passages_sorted_by_heure_passage():
     assert passages[2].heure_passage == datetime(2026, 4, 10, 17, 0, 0)
 
 
+@pytest.mark.asyncio
+async def test_get_stop_passages_returns_all_passages_for_stop():
+    client = _make_client_with_response(SAMPLE_API_RESPONSE)
+    passages = await client.get_stop_passages(30101)
+
+    assert len(passages) == 2
+    assert passages[0].heure_passage == datetime(2026, 4, 10, 16, 30, 0)
+    assert passages[1].heure_passage == datetime(2026, 4, 10, 16, 52, 43)
+    assert passages[0].type == PassageType.ESTIMATED
+    assert passages[1].type == PassageType.THEORETICAL
+
+
+@pytest.mark.asyncio
+async def test_get_stop_passages_returns_empty_when_no_match():
+    client = _make_client_with_response(SAMPLE_API_RESPONSE)
+    passages = await client.get_stop_passages(12345)
+    assert passages == []
+
+
 SAMPLE_VELOV_RESPONSE = {
     "fields": [],
     "nb_results": 2,

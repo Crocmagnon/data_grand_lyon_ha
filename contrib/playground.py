@@ -25,6 +25,12 @@ async def main() -> None:
             print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M})")
 
         print()
+        print(f"=== Tous les passages - arrêt {arret} ===")
+        all_passages = await client.get_stop_passages(arret)
+        for p in all_passages:
+            print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M}) [{p.type}]")
+
+        print()
         ptype = PassageType.ESTIMATED
         print(f"=== Passages {ptype} - Ligne {ligne}, arrêt {arret} ===")
         passages = await client.get_passages(ligne, arret, ptype)

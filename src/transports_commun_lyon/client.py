@@ -67,6 +67,37 @@ class TCLClient:
         passages.sort(key=lambda p: p.heure_passage)
         return passages
 
+    async def get_stop_passages(
+        self,
+        stop_id: int,
+    ) -> list[Passage]:
+        """Retrieve all passages for a given stop, regardless of line or type."""
+        url = f"{self.BASE_URL}/tcl_sytral.tclpassagearret/all.json"
+        async with self._session.get(
+            url, params={"maxfeatures": "-1"}, auth=self._auth
+        ) as resp:
+            resp.raise_for_status()
+            data = await resp.json()
+
+        passages = [
+            Passage(
+                id=v["id"],
+                ligne=v["ligne"],
+                direction=v["direction"],
+                delai_passage=v["delaipassage"],
+                type=PassageType(v["type"]),
+                heure_passage=datetime.strptime(
+                    v["heurepassage"], _PASSAGE_DATETIME_FORMAT
+                ),
+                id_tarret_destination=v["idtarretdestination"],
+                course_theorique=v["coursetheorique"],
+            )
+            for v in data["values"]
+            if v["id"] == stop_id
+        ]
+        passages.sort(key=lambda p: p.heure_passage)
+        return passages
+
     async def get_velov_station(
         self, station_id: int
     ) -> VelovStationStatus | None:
