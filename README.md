@@ -19,9 +19,21 @@ uv add transports-commun-lyon
 ## Usage
 
 ```python
-from transports_commun_lyon import hello_world
+import asyncio
+import aiohttp
+from transports_commun_lyon import TCLClient, PassageType
 
-print(hello_world())
+async def main():
+    async with aiohttp.ClientSession() as session:
+        client = TCLClient(session)
+        # Or with authentication:
+        # client = TCLClient(session, username="user", password="pass")
+
+        passages = await client.get_passages("A", 30101, PassageType.THEORETICAL)
+        for p in passages:
+            print(f"{p.ligne} → {p.direction} in {p.delai_passage}")
+
+asyncio.run(main())
 ```
 
 ## Development
