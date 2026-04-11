@@ -1,4 +1,4 @@
-"""HTTP client for the Grand Lyon TCL/Sytral data API."""
+"""HTTP client for the Grand Lyon open data API."""
 
 from datetime import datetime
 
@@ -16,8 +16,8 @@ from .models import (
 _PASSAGE_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-class TCLClient:
-    """HTTP client for the Grand Lyon TCL/Sytral data API."""
+class DataGrandLyonClient:
+    """HTTP client for the Grand Lyon open data API."""
 
     BASE_URL = "https://data.grandlyon.com/fr/datapusher/ws/rdata"
 
@@ -47,7 +47,7 @@ class TCLClient:
         result.sort(key=lambda p: p.heure_passage)
         return result
 
-    async def get_passages(
+    async def get_tcl_passages(
         self,
         ligne: str,
         stop_id: int,
@@ -84,7 +84,7 @@ class TCLClient:
         passages.sort(key=lambda p: p.heure_passage)
         return passages
 
-    async def get_stop_passages(
+    async def get_tcl_stop_passages(
         self,
         stop_id: int,
     ) -> list[Passage]:

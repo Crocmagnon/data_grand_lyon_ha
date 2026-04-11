@@ -1,6 +1,6 @@
-"""Retrieve public transport data from the TCL/Sytral network in Lyon, France."""
+"""Retrieve data from the Grand Lyon open data platform."""
 
-from .client import TCLClient
+from .client import DataGrandLyonClient
 from .models import (
     Availability,
     Passage,
@@ -15,7 +15,7 @@ __all__ = [
     "Passage",
     "PassageType",
     "StationStatus",
-    "TCLClient",
+    "DataGrandLyonClient",
     "VelovAvailability",
     "VelovStationStatus",
 ]

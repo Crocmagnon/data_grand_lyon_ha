@@ -1,11 +1,11 @@
-"""Playground script to test the TCL client against the live API."""
+"""Playground script to test the client against the live API."""
 
 import asyncio
 import os
 
 import aiohttp
 
-from data_grand_lyon_ha import PassageType, TCLClient
+from data_grand_lyon_ha import DataGrandLyonClient, PassageType
 
 
 async def main() -> None:
@@ -13,27 +13,27 @@ async def main() -> None:
     password = os.environ.get("TCL_PASSWORD")
 
     async with aiohttp.ClientSession() as session:
-        client = TCLClient(session, username=username, password=password)
+        client = DataGrandLyonClient(session, username=username, password=password)
 
         ligne = "37"
         arret = 290
         ptype = PassageType.THEORETICAL
 
         print(f"=== Passages {ptype} - Ligne {ligne}, arrêt {arret} ===")
-        passages = await client.get_passages(ligne, arret, ptype)
+        passages = await client.get_tcl_passages(ligne, arret, ptype)
         for p in passages:
             print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M})")
 
         print()
         print(f"=== Tous les passages - arrêt {arret} ===")
-        all_passages = await client.get_stop_passages(arret)
+        all_passages = await client.get_tcl_stop_passages(arret)
         for p in all_passages:
             print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M}) [{p.type}]")
 
         print()
         ptype = PassageType.ESTIMATED
         print(f"=== Passages {ptype} - Ligne {ligne}, arrêt {arret} ===")
-        passages = await client.get_passages(ligne, arret, ptype)
+        passages = await client.get_tcl_passages(ligne, arret, ptype)
         for p in passages:
             print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M})")
 
