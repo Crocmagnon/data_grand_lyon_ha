@@ -1,11 +1,11 @@
-"""Data models for TCL/Sytral transport data."""
+"""Data models for the Grand Lyon open data platform."""
 
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
 
-class PassageType(StrEnum):
+class TclPassageType(StrEnum):
     """Type of passage: theoretical or estimated."""
 
     THEORETICAL = "T"
@@ -13,27 +13,27 @@ class PassageType(StrEnum):
 
 
 @dataclass(frozen=True)
-class Passage:
+class TclPassage:
     """A single passage of a bus/tram/metro at a stop."""
 
     id: int
     ligne: str
     direction: str
     delai_passage: str
-    type: PassageType
+    type: TclPassageType
     heure_passage: datetime
     id_tarret_destination: int
     course_theorique: str
 
 
-class StationStatus(StrEnum):
+class VelovStationStatus(StrEnum):
     """Operational status of a Vélo'v station."""
 
     OPEN = "OPEN"
     CLOSED = "CLOSED"
 
 
-class Availability(StrEnum):
+class VelovAvailabilityLevel(StrEnum):
     """Color-coded availability level of a Vélo'v station."""
 
     GREEN = "Vert"
@@ -43,7 +43,7 @@ class Availability(StrEnum):
 
 
 @dataclass(frozen=True)
-class VelovAvailability:
+class VelovBikeStandAvailability:
     """Detailed bike availability at a Vélo'v station."""
 
     bikes: int
@@ -56,15 +56,15 @@ class VelovAvailability:
 
 
 @dataclass(frozen=True)
-class VelovStationStatus:
+class VelovStation:
     """Status of a Vélo'v station."""
 
     number: int
     name: str
     address: str
     commune: str
-    status: StationStatus
-    availability: Availability
+    status: VelovStationStatus
+    availability: VelovAvailabilityLevel
     lat: float
     lng: float
     bike_stands: int
@@ -72,4 +72,4 @@ class VelovStationStatus:
     available_bike_stands: int
     banking: bool
     last_update: datetime
-    total_stands: VelovAvailability
+    total_stands: VelovBikeStandAvailability

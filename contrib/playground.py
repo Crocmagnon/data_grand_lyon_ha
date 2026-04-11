@@ -5,7 +5,7 @@ import os
 
 import aiohttp
 
-from data_grand_lyon_ha import DataGrandLyonClient, PassageType
+from data_grand_lyon_ha import DataGrandLyonClient, TclPassageType
 
 
 async def main() -> None:
@@ -17,7 +17,7 @@ async def main() -> None:
 
         ligne = "37"
         arret = 290
-        ptype = PassageType.THEORETICAL
+        ptype = TclPassageType.THEORETICAL
 
         print(f"=== Passages {ptype} - Ligne {ligne}, arrêt {arret} ===")
         passages = await client.get_tcl_passages(ligne, arret, ptype)
@@ -31,7 +31,7 @@ async def main() -> None:
             print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M}) [{p.type}]")
 
         print()
-        ptype = PassageType.ESTIMATED
+        ptype = TclPassageType.ESTIMATED
         print(f"=== Passages {ptype} - Ligne {ligne}, arrêt {arret} ===")
         passages = await client.get_tcl_passages(ligne, arret, ptype)
         for p in passages:

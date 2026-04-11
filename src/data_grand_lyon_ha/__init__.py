@@ -2,20 +2,20 @@
 
 from .client import DataGrandLyonClient
 from .models import (
-    Availability,
-    Passage,
-    PassageType,
-    StationStatus,
-    VelovAvailability,
+    TclPassage,
+    TclPassageType,
+    VelovAvailabilityLevel,
+    VelovBikeStandAvailability,
+    VelovStation,
     VelovStationStatus,
 )
 
 __all__ = [
-    "Availability",
-    "Passage",
-    "PassageType",
-    "StationStatus",
     "DataGrandLyonClient",
-    "VelovAvailability",
+    "TclPassage",
+    "TclPassageType",
+    "VelovAvailabilityLevel",
+    "VelovBikeStandAvailability",
+    "VelovStation",
     "VelovStationStatus",
 ]

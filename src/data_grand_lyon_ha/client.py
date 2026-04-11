@@ -5,11 +5,11 @@ from datetime import datetime
 import aiohttp
 
 from .models import (
-    Availability,
-    Passage,
-    PassageType,
-    StationStatus,
-    VelovAvailability,
+    TclPassage,
+    TclPassageType,
+    VelovAvailabilityLevel,
+    VelovBikeStandAvailability,
+    VelovStation,
     VelovStationStatus,
 )
 
@@ -33,14 +33,14 @@ class DataGrandLyonClient:
             self._auth = aiohttp.BasicAuth(username, password)
 
     @staticmethod
-    def _merge_passages(passages: list[Passage]) -> list[Passage]:
+    def _merge_passages(passages: list[TclPassage]) -> list[TclPassage]:
         """Deduplicate passages by course_theorique, preferring estimated over theoretical."""
-        by_course: dict[str, Passage] = {}
+        by_course: dict[str, TclPassage] = {}
         for p in passages:
             existing = by_course.get(p.course_theorique)
             if existing is None or (
-                existing.type == PassageType.THEORETICAL
-                and p.type == PassageType.ESTIMATED
+                existing.type == TclPassageType.THEORETICAL
+                and p.type == TclPassageType.ESTIMATED
             ):
                 by_course[p.course_theorique] = p
         result = list(by_course.values())
@@ -51,8 +51,8 @@ class DataGrandLyonClient:
         self,
         ligne: str,
         stop_id: int,
-        passage_type: PassageType | None = None,
-    ) -> list[Passage]:
+        passage_type: TclPassageType | None = None,
+    ) -> list[TclPassage]:
         """Retrieve passages for a given line and stop, optionally filtered by type."""
         url = f"{self.BASE_URL}/tcl_sytral.tclpassagearret/all.json"
         async with self._session.get(
@@ -62,12 +62,12 @@ class DataGrandLyonClient:
             data = await resp.json()
 
         passages = [
-            Passage(
+            TclPassage(
                 id=v["id"],
                 ligne=v["ligne"],
                 direction=v["direction"],
                 delai_passage=v["delaipassage"],
-                type=PassageType(v["type"]),
+                type=TclPassageType(v["type"]),
                 heure_passage=datetime.strptime(
                     v["heurepassage"], _PASSAGE_DATETIME_FORMAT
                 ),
@@ -87,7 +87,7 @@ class DataGrandLyonClient:
     async def get_tcl_stop_passages(
         self,
         stop_id: int,
-    ) -> list[Passage]:
+    ) -> list[TclPassage]:
         """Retrieve all passages for a given stop, regardless of line or type."""
         url = f"{self.BASE_URL}/tcl_sytral.tclpassagearret/all.json"
         async with self._session.get(
@@ -97,12 +97,12 @@ class DataGrandLyonClient:
             data = await resp.json()
 
         passages = [
-            Passage(
+            TclPassage(
                 id=v["id"],
                 ligne=v["ligne"],
                 direction=v["direction"],
                 delai_passage=v["delaipassage"],
-                type=PassageType(v["type"]),
+                type=TclPassageType(v["type"]),
                 heure_passage=datetime.strptime(
                     v["heurepassage"], _PASSAGE_DATETIME_FORMAT
                 ),
@@ -116,7 +116,7 @@ class DataGrandLyonClient:
 
     async def get_velov_station(
         self, station_id: int
-    ) -> VelovStationStatus | None:
+    ) -> VelovStation | None:
         """Retrieve the status of a Vélo'v station by its ID."""
         url = f"{self.BASE_URL}/jcd_jcdecaux.jcdvelov/all.json"
         async with self._session.get(
@@ -128,13 +128,13 @@ class DataGrandLyonClient:
         for v in data["values"]:
             if v["number"] == station_id:
                 ts = v["total_stands"]
-                return VelovStationStatus(
+                return VelovStation(
                     number=v["number"],
                     name=v["name"],
                     address=v["address"],
                     commune=v["commune"],
-                    status=StationStatus(v["status"]),
-                    availability=Availability(v["availability"]),
+                    status=VelovStationStatus(v["status"]),
+                    availability=VelovAvailabilityLevel(v["availability"]),
                     lat=v["lat"],
                     lng=v["lng"],
                     bike_stands=v["bike_stands"],
@@ -142,7 +142,7 @@ class DataGrandLyonClient:
                     available_bike_stands=v["available_bike_stands"],
                     banking=v["banking"],
                     last_update=datetime.fromisoformat(v["last_update"]),
-                    total_stands=VelovAvailability(
+                    total_stands=VelovBikeStandAvailability(
                         bikes=ts["availabilities"]["bikes"],
                         electrical_bikes=ts["availabilities"]["electricalBikes"],
                         electrical_internal_battery_bikes=ts["availabilities"][

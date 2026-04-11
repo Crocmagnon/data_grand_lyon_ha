@@ -5,12 +5,12 @@ import aiohttp
 import pytest
 
 from data_grand_lyon_ha import (
-    Availability,
-    Passage,
-    PassageType,
-    StationStatus,
     DataGrandLyonClient,
-    VelovAvailability,
+    TclPassage,
+    TclPassageType,
+    VelovAvailabilityLevel,
+    VelovBikeStandAvailability,
+    VelovStation,
     VelovStationStatus,
 )
 
@@ -89,15 +89,15 @@ def test_client_with_credentials():
 @pytest.mark.asyncio
 async def test_get_passages_filters_by_ligne_stop_id_and_type():
     client = _make_client_with_response(SAMPLE_API_RESPONSE)
-    passages = await client.get_tcl_passages("A", 30101, PassageType.THEORETICAL)
+    passages = await client.get_tcl_passages("A", 30101, TclPassageType.THEORETICAL)
 
     assert len(passages) == 1
-    assert passages[0] == Passage(
+    assert passages[0] == TclPassage(
         id=30101,
         ligne="A",
         direction="Vaulx-en-Velin La Soie",
         delai_passage="25 min",
-        type=PassageType.THEORETICAL,
+        type=TclPassageType.THEORETICAL,
         heure_passage=datetime(2026, 4, 10, 16, 52, 43),
         id_tarret_destination=36394,
         course_theorique="301_301A-0805V_00701083",
@@ -107,7 +107,7 @@ async def test_get_passages_filters_by_ligne_stop_id_and_type():
 @pytest.mark.asyncio
 async def test_get_passages_returns_empty_when_no_match():
     client = _make_client_with_response(SAMPLE_API_RESPONSE)
-    passages = await client.get_tcl_passages("C", 12345, PassageType.ESTIMATED)
+    passages = await client.get_tcl_passages("C", 12345, TclPassageType.ESTIMATED)
     assert passages == []
 
 
@@ -162,11 +162,11 @@ async def test_get_passages_without_type_merges_by_course_theorique():
     assert len(passages) == 2
     # course_1: E kept, T discarded
     assert passages[0].course_theorique == "course_1"
-    assert passages[0].type == PassageType.ESTIMATED
+    assert passages[0].type == TclPassageType.ESTIMATED
     assert passages[0].heure_passage == datetime(2026, 4, 10, 16, 30, 0)
     # course_2: only T, kept as-is
     assert passages[1].course_theorique == "course_2"
-    assert passages[1].type == PassageType.THEORETICAL
+    assert passages[1].type == TclPassageType.THEORETICAL
 
 
 @pytest.mark.asyncio
@@ -183,18 +183,18 @@ async def test_get_passages_without_type_no_merge_when_different_courses():
 async def test_get_passages_with_type_does_not_merge():
     """When passage_type is specified, no merging occurs."""
     client = _make_client_with_response(SAMPLE_API_RESPONSE)
-    passages = await client.get_tcl_passages("A", 30101, PassageType.THEORETICAL)
+    passages = await client.get_tcl_passages("A", 30101, TclPassageType.THEORETICAL)
     assert len(passages) == 1
-    assert passages[0].type == PassageType.THEORETICAL
+    assert passages[0].type == TclPassageType.THEORETICAL
 
 
 @pytest.mark.asyncio
 async def test_get_passages_estimated_type():
     client = _make_client_with_response(SAMPLE_API_RESPONSE)
-    passages = await client.get_tcl_passages("A", 30101, PassageType.ESTIMATED)
+    passages = await client.get_tcl_passages("A", 30101, TclPassageType.ESTIMATED)
 
     assert len(passages) == 1
-    assert passages[0].type == PassageType.ESTIMATED
+    assert passages[0].type == TclPassageType.ESTIMATED
     assert passages[0].heure_passage == datetime(2026, 4, 10, 16, 30, 0)
 
 
@@ -243,7 +243,7 @@ async def test_get_passages_sorted_by_heure_passage():
         ],
     }
     client = _make_client_with_response(response)
-    passages = await client.get_tcl_passages("A", 100, PassageType.THEORETICAL)
+    passages = await client.get_tcl_passages("A", 100, TclPassageType.THEORETICAL)
 
     assert len(passages) == 3
     assert passages[0].heure_passage == datetime(2026, 4, 10, 16, 5, 0)
@@ -298,7 +298,7 @@ async def test_get_stop_passages_merges_by_course_theorique():
     passages = await client.get_tcl_stop_passages(200)
 
     assert len(passages) == 1
-    assert passages[0].type == PassageType.ESTIMATED
+    assert passages[0].type == TclPassageType.ESTIMATED
     assert passages[0].delai_passage == "18 min"
 
 
@@ -374,13 +374,13 @@ async def test_get_velov_station_found():
     client = _make_client_with_response(SAMPLE_VELOV_RESPONSE)
     station = await client.get_velov_station(15002)
 
-    assert station == VelovStationStatus(
+    assert station == VelovStation(
         number=15002,
         name="15002 - ST PRIEST - CITE BERLIET",
         address="Place Steven Spielberg",
         commune="Saint-Priest",
-        status=StationStatus.OPEN,
-        availability=Availability.GREEN,
+        status=VelovStationStatus.OPEN,
+        availability=VelovAvailabilityLevel.GREEN,
         lat=45.70597,
         lng=4.900886,
         bike_stands=20,
@@ -388,7 +388,7 @@ async def test_get_velov_station_found():
         available_bike_stands=13,
         banking=False,
         last_update=datetime.fromisoformat("2026-04-10 16:28:08+02:00"),
-        total_stands=VelovAvailability(
+        total_stands=VelovBikeStandAvailability(
             bikes=7,
             electrical_bikes=3,
             electrical_internal_battery_bikes=3,

@@ -21,7 +21,7 @@ uv add data-grand-lyon-ha
 ```python
 import asyncio
 import aiohttp
-from data_grand_lyon_ha import DataGrandLyonClient, PassageType
+from data_grand_lyon_ha import DataGrandLyonClient, TclPassageType
 
 async def main():
     async with aiohttp.ClientSession() as session:
@@ -30,7 +30,7 @@ async def main():
         # client = DataGrandLyonClient(session, username="user", password="pass")
 
         # Passages for a specific line, stop, and type
-        passages = await client.get_tcl_passages("A", 30101, PassageType.THEORETICAL)
+        passages = await client.get_tcl_passages("A", 30101, TclPassageType.THEORETICAL)
         for p in passages:
             print(f"{p.ligne} → {p.direction} in {p.delai_passage}")
 
