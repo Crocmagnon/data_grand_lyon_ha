@@ -112,13 +112,80 @@ async def test_get_passages_returns_empty_when_no_match():
 
 
 @pytest.mark.asyncio
-async def test_get_passages_without_type_returns_all_types():
-    client = _make_client_with_response(SAMPLE_API_RESPONSE)
+async def test_get_passages_without_type_merges_by_course_theorique():
+    """When both T and E exist for the same course_theorique, only E is kept."""
+    response = {
+        "fields": [],
+        "nb_results": 3,
+        "values": [
+            {
+                "id": 30101,
+                "ligne": "A",
+                "direction": "Vaulx-en-Velin La Soie",
+                "delaipassage": "25 min",
+                "type": "T",
+                "heurepassage": "2026-04-10 16:52:43",
+                "idtarretdestination": 36394,
+                "coursetheorique": "course_1",
+                "gid": 1,
+                "last_update_fme": "2026-04-10 16:27:01",
+            },
+            {
+                "id": 30101,
+                "ligne": "A",
+                "direction": "Vaulx-en-Velin La Soie",
+                "delaipassage": "3 min",
+                "type": "E",
+                "heurepassage": "2026-04-10 16:30:00",
+                "idtarretdestination": 36394,
+                "coursetheorique": "course_1",
+                "gid": 2,
+                "last_update_fme": "2026-04-10 16:27:01",
+            },
+            {
+                "id": 30101,
+                "ligne": "A",
+                "direction": "Vaulx-en-Velin La Soie",
+                "delaipassage": "40 min",
+                "type": "T",
+                "heurepassage": "2026-04-10 17:10:00",
+                "idtarretdestination": 36394,
+                "coursetheorique": "course_2",
+                "gid": 3,
+                "last_update_fme": "2026-04-10 16:27:01",
+            },
+        ],
+    }
+    client = _make_client_with_response(response)
     passages = await client.get_passages("A", 30101)
 
     assert len(passages) == 2
+    # course_1: E kept, T discarded
+    assert passages[0].course_theorique == "course_1"
     assert passages[0].type == PassageType.ESTIMATED
+    assert passages[0].heure_passage == datetime(2026, 4, 10, 16, 30, 0)
+    # course_2: only T, kept as-is
+    assert passages[1].course_theorique == "course_2"
     assert passages[1].type == PassageType.THEORETICAL
+
+
+@pytest.mark.asyncio
+async def test_get_passages_without_type_no_merge_when_different_courses():
+    """Passages with different course_theorique are not merged."""
+    client = _make_client_with_response(SAMPLE_API_RESPONSE)
+    passages = await client.get_passages("A", 30101)
+
+    # SAMPLE_API_RESPONSE has two passages for stop 30101/ligne A with different course_theorique
+    assert len(passages) == 2
+
+
+@pytest.mark.asyncio
+async def test_get_passages_with_type_does_not_merge():
+    """When passage_type is specified, no merging occurs."""
+    client = _make_client_with_response(SAMPLE_API_RESPONSE)
+    passages = await client.get_passages("A", 30101, PassageType.THEORETICAL)
+    assert len(passages) == 1
+    assert passages[0].type == PassageType.THEORETICAL
 
 
 @pytest.mark.asyncio
@@ -189,11 +256,50 @@ async def test_get_stop_passages_returns_all_passages_for_stop():
     client = _make_client_with_response(SAMPLE_API_RESPONSE)
     passages = await client.get_stop_passages(30101)
 
+    # Two passages with different course_theorique, no merge
     assert len(passages) == 2
     assert passages[0].heure_passage == datetime(2026, 4, 10, 16, 30, 0)
     assert passages[1].heure_passage == datetime(2026, 4, 10, 16, 52, 43)
+
+
+@pytest.mark.asyncio
+async def test_get_stop_passages_merges_by_course_theorique():
+    response = {
+        "fields": [],
+        "nb_results": 2,
+        "values": [
+            {
+                "id": 200,
+                "ligne": "B",
+                "direction": "Dir",
+                "delaipassage": "20 min",
+                "type": "T",
+                "heurepassage": "2026-04-10 16:50:00",
+                "idtarretdestination": 1,
+                "coursetheorique": "same_course",
+                "gid": 1,
+                "last_update_fme": "2026-04-10 16:00:00",
+            },
+            {
+                "id": 200,
+                "ligne": "B",
+                "direction": "Dir",
+                "delaipassage": "18 min",
+                "type": "E",
+                "heurepassage": "2026-04-10 16:48:00",
+                "idtarretdestination": 1,
+                "coursetheorique": "same_course",
+                "gid": 2,
+                "last_update_fme": "2026-04-10 16:00:00",
+            },
+        ],
+    }
+    client = _make_client_with_response(response)
+    passages = await client.get_stop_passages(200)
+
+    assert len(passages) == 1
     assert passages[0].type == PassageType.ESTIMATED
-    assert passages[1].type == PassageType.THEORETICAL
+    assert passages[0].delai_passage == "18 min"
 
 
 @pytest.mark.asyncio

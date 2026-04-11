@@ -32,6 +32,21 @@ class TCLClient:
         if username is not None and password is not None:
             self._auth = aiohttp.BasicAuth(username, password)
 
+    @staticmethod
+    def _merge_passages(passages: list[Passage]) -> list[Passage]:
+        """Deduplicate passages by course_theorique, preferring estimated over theoretical."""
+        by_course: dict[str, Passage] = {}
+        for p in passages:
+            existing = by_course.get(p.course_theorique)
+            if existing is None or (
+                existing.type == PassageType.THEORETICAL
+                and p.type == PassageType.ESTIMATED
+            ):
+                by_course[p.course_theorique] = p
+        result = list(by_course.values())
+        result.sort(key=lambda p: p.heure_passage)
+        return result
+
     async def get_passages(
         self,
         ligne: str,
@@ -64,6 +79,8 @@ class TCLClient:
             and v["id"] == stop_id
             and (passage_type is None or v["type"] == passage_type)
         ]
+        if passage_type is None:
+            return self._merge_passages(passages)
         passages.sort(key=lambda p: p.heure_passage)
         return passages
 
@@ -95,8 +112,7 @@ class TCLClient:
             for v in data["values"]
             if v["id"] == stop_id
         ]
-        passages.sort(key=lambda p: p.heure_passage)
-        return passages
+        return self._merge_passages(passages)
 
     async def get_velov_station(
         self, station_id: int
