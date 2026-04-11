@@ -1,6 +1,6 @@
 [project]
 name = "data-grand-lyon-ha"
-version = "0.4.0"
+version = "0.5.0"
 description = "Python library to retrieve data from Grand Lyon open data platform, for Home Assistant."
 readme = "README.md"
 license = "MIT"
