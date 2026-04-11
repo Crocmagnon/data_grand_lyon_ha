@@ -1,7 +1,7 @@
 [project]
-name = "transports-commun-lyon"
+name = "data-grand-lyon-ha"
 version = "0.4.0"
-description = "Python library to retrieve public transport data from the TCL/Sytral network in Lyon, France"
+description = "Python library to retrieve data from Grand Lyon open data platform, for Home Assistant."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.14"
@@ -21,7 +21,7 @@ classifiers = [
 ]
 
 [project.urls]
-Source = "https://codeberg.org/Crocmagnon/transports_commun_lyon"
+Source = "https://codeberg.org/Crocmagnon/data_grand_lyon_ha"
 
 [dependency-groups]
 dev = [

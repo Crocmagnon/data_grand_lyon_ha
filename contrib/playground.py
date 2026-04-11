@@ -5,7 +5,7 @@ import os
 
 import aiohttp
 
-from transports_commun_lyon import PassageType, TCLClient
+from data_grand_lyon_ha import PassageType, TCLClient
 
 
 async def main() -> None:

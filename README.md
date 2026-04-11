@@ -1,19 +1,19 @@
-# transports_commun_lyon
+# data_grand_lyon_ha
 
-Python library to retrieve public transport data from the TCL/Sytral network in Lyon, France.
+Python library to retrieve data from the [Grand Lyon open data platform](https://data.grandlyon.com).
 
 Intended for use as a [Home Assistant](https://www.home-assistant.io/) integration backend.
 
 ## Installation
 
 ```bash
-pip install transports-commun-lyon
+pip install data-grand-lyon-ha
 ```
 
 Or with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv add transports-commun-lyon
+uv add data-grand-lyon-ha
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ uv add transports-commun-lyon
 ```python
 import asyncio
 import aiohttp
-from transports_commun_lyon import TCLClient, PassageType
+from data_grand_lyon_ha import TCLClient, PassageType
 
 async def main():
     async with aiohttp.ClientSession() as session:

@@ -28,7 +28,7 @@ TCL_USERNAME=xxx TCL_PASSWORD=yyy uv run python contrib/playground.py
 
 ## Architecture
 
-- **src layout**: Source code lives in `src/transports_commun_lyon/`
+- **src layout**: Source code lives in `src/data_grand_lyon_ha/`
 - **Build backend**: hatchling
 - **Package manager**: uv
 - **CI/CD**: Forgejo Actions (`.forgejo/workflows/ci.yml`)

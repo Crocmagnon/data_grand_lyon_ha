@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import aiohttp
 import pytest
 
-from transports_commun_lyon import (
+from data_grand_lyon_ha import (
     Availability,
     Passage,
     PassageType,
