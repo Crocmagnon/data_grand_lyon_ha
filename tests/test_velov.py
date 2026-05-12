@@ -6,6 +6,7 @@ from data_grand_lyon_ha import (
     VelovStation,
     VelovStationStatus,
     find_velov_station_by_id,
+    find_velov_stations_by_ids,
 )
 
 STATIONS = [
@@ -76,3 +77,24 @@ def test_find_station_returns_correct_one():
     station = find_velov_station_by_id(STATIONS, 99999)
     assert station is not None
     assert station.status == VelovStationStatus.CLOSED
+
+
+def test_find_stations_by_ids_all_found():
+    result = find_velov_stations_by_ids(STATIONS, [15002, 99999])
+    assert len(result) == 2
+    assert result[15002] is not None
+    assert result[15002].number == 15002
+    assert result[99999] is not None
+    assert result[99999].number == 99999
+
+
+def test_find_stations_by_ids_none_found():
+    result = find_velov_stations_by_ids(STATIONS, [11111, 22222])
+    assert result == {11111: None, 22222: None}
+
+
+def test_find_stations_by_ids_partial_match():
+    result = find_velov_stations_by_ids(STATIONS, [15002, 11111])
+    assert result[15002] is not None
+    assert result[15002].number == 15002
+    assert result[11111] is None

@@ -4,6 +4,7 @@ from data_grand_lyon_ha import (
     TclPassage,
     TclPassageType,
     filter_tcl_passages_by_line,
+    filter_tcl_passages_by_lines_stops,
     filter_tcl_passages_by_stop,
     sort_tcl_passages_by_time,
 )
@@ -84,6 +85,30 @@ def test_sort_already_sorted():
     already = sorted(PASSAGES, key=lambda p: p.heure_passage)
     result = sort_tcl_passages_by_time(already)
     assert result == already
+
+
+def test_filter_by_lines_stops():
+    result = filter_tcl_passages_by_lines_stops(
+        PASSAGES, [("A", 30101), ("B", 99999)]
+    )
+    assert len(result) == 2
+    assert len(result[("A", 30101)]) == 3
+    assert all(p.ligne == "A" and p.id == 30101 for p in result[("A", 30101)])
+    assert len(result[("B", 99999)]) == 1
+    assert result[("B", 99999)][0].ligne == "B"
+
+
+def test_filter_by_lines_stops_no_match():
+    result = filter_tcl_passages_by_lines_stops(PASSAGES, [("C", 12345)])
+    assert result == {("C", 12345): []}
+
+
+def test_filter_by_lines_stops_partial_match():
+    result = filter_tcl_passages_by_lines_stops(
+        PASSAGES, [("A", 30101), ("C", 12345)]
+    )
+    assert len(result[("A", 30101)]) == 3
+    assert result[("C", 12345)] == []
 
 
 def test_composing_filters():
