@@ -5,7 +5,13 @@ import os
 
 import aiohttp
 
-from data_grand_lyon_ha import DataGrandLyonClient, TclPassageType
+from data_grand_lyon_ha import (
+    DataGrandLyonClient,
+    filter_tcl_passages_by_line,
+    filter_tcl_passages_by_stop,
+    find_velov_station_by_id,
+    sort_tcl_passages_by_time,
+)
 
 
 async def main() -> None:
@@ -15,32 +21,23 @@ async def main() -> None:
     async with aiohttp.ClientSession() as session:
         client = DataGrandLyonClient(session, username=username, password=password)
 
+        all_passages = await client.get_tcl_passages()
+
         ligne = "37"
         arret = 290
-        ptype = TclPassageType.THEORETICAL
 
-        print(f"=== Passages {ptype} - Ligne {ligne}, arrêt {arret} ===")
-        passages = await client.get_tcl_passages(ligne, arret, ptype)
-        for p in passages:
-            print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M})")
-
-        print()
-        print(f"=== Tous les passages - arrêt {arret} ===")
-        all_passages = await client.get_tcl_stop_passages(arret)
-        for p in all_passages:
-            print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M}) [{p.type}]")
-
-        print()
-        ptype = TclPassageType.ESTIMATED
-        print(f"=== Passages {ptype} - Ligne {ligne}, arrêt {arret} ===")
-        passages = await client.get_tcl_passages(ligne, arret, ptype)
+        print(f"=== Passages - Ligne {ligne}, arrêt {arret} ===")
+        passages = filter_tcl_passages_by_line(all_passages, ligne)
+        passages = filter_tcl_passages_by_stop(passages, arret)
+        passages = sort_tcl_passages_by_time(passages)
         for p in passages:
             print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M})")
 
         print()
         station_id = 10044
         print(f"=== Vélo'v station {station_id} ===")
-        station = await client.get_velov_station(station_id)
+        all_stations = await client.get_velov_stations()
+        station = find_velov_station_by_id(all_stations, station_id)
         if station:
             print(f"  {station.name} ({station.commune})")
             print(f"  Status: {station.status} | Availability: {station.availability}")

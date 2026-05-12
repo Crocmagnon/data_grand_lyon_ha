@@ -9,6 +9,12 @@ from .models import (
     VelovStation,
     VelovStationStatus,
 )
+from .tcl import (
+    filter_tcl_passages_by_line,
+    filter_tcl_passages_by_stop,
+    sort_tcl_passages_by_time,
+)
+from .velov import find_velov_station_by_id
 
 __all__ = [
     "DataGrandLyonClient",
@@ -18,4 +24,8 @@ __all__ = [
     "VelovBikeStandAvailability",
     "VelovStation",
     "VelovStationStatus",
+    "filter_tcl_passages_by_line",
+    "filter_tcl_passages_by_stop",
+    "find_velov_station_by_id",
+    "sort_tcl_passages_by_time",
 ]

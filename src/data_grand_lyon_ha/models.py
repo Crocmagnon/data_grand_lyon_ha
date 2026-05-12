@@ -71,5 +71,5 @@ class VelovStation:
     available_bikes: int
     available_bike_stands: int
     banking: bool
-    last_update: datetime
+    last_update: datetime | None
     total_stands: VelovBikeStandAvailability
