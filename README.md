@@ -21,29 +21,42 @@ uv add data-grand-lyon-ha
 ```python
 import asyncio
 import aiohttp
-from data_grand_lyon_ha import DataGrandLyonClient, TclPassageType, find_tcl_stop_by_id
+from data_grand_lyon_ha import (
+    DataGrandLyonClient,
+    filter_tcl_passages_by_line,
+    filter_tcl_passages_by_stop,
+    find_tcl_stop_by_id,
+    find_velov_station_by_id,
+    sort_tcl_passages_by_time,
+)
 
 async def main():
     async with aiohttp.ClientSession() as session:
         client = DataGrandLyonClient(session)
-        # Or with authentication:
+        # Or with authentication (required for real-time TCL passages):
         # client = DataGrandLyonClient(session, username="user", password="pass")
 
-        # Passages for a specific line, stop, and type
-        passages = await client.get_tcl_passages("A", 30101, TclPassageType.THEORETICAL)
-        for p in passages:
-            print(f"{p.ligne} → {p.direction} in {p.delai_passage}")
-
-        # All passages for a stop (all lines and types)
-        all_passages = await client.get_tcl_stop_passages(30101)
-        for p in all_passages:
+        # TCL passages: fetch all, then filter and sort client-side
+        all_passages = await client.get_tcl_passages()
+        passages = filter_tcl_passages_by_stop(
+            filter_tcl_passages_by_line(all_passages, "A"), 30101
+        )
+        for p in sort_tcl_passages_by_time(passages):
             print(f"{p.ligne} → {p.direction} in {p.delai_passage} [{p.type}]")
 
-        # All TCL stops, then look one up by ID
+        # TCL stops: fetch all, then look one up by ID
         stops = await client.get_tcl_stops()
         stop = find_tcl_stop_by_id(stops, 1041)
         if stop:
             print(f"{stop.nom} ({stop.commune}) — lines: {stop.desserte}")
+
+        # Vélo'v stations: fetch all, then look one up by ID
+        stations = await client.get_velov_stations()
+        station = find_velov_station_by_id(stations, 10044)
+        if station:
+            print(
+                f"{station.name}: {station.available_bikes}/{station.bike_stands} bikes"
+            )
 
 asyncio.run(main())
 ```

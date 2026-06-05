@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Python library to retrieve public transport data from the TCL/Sytral network in Lyon, France.
+Python library to retrieve open data from the Grand Lyon platform: TCL/Sytral public transport (stops and real-time passages) and Vélo'v bike-sharing stations.
 Intended for use as a Home Assistant integration backend.
 
 Uses `aiohttp` with session injection (the caller provides an `aiohttp.ClientSession`), following the standard Home Assistant integration pattern.
@@ -38,7 +38,9 @@ TCL_USERNAME=xxx TCL_PASSWORD=yyy uv run python contrib/playground.py
 ### Key Modules
 
 - `client.py` — `DataGrandLyonClient` class: async HTTP client for the Grand Lyon data API (`https://data.grandlyon.com/fr/datapusher/ws/rdata`)
-- `models.py` — Data models: `TclPassage`, `TclPassageType`, `VelovStation`, `VelovStationStatus`, `VelovAvailabilityLevel`, `VelovBikeStandAvailability`
+- `models.py` — Data models: `TclPassage`, `TclPassageType`, `TclStop`, `VelovStation`, `VelovStationStatus`, `VelovAvailabilityLevel`, `VelovBikeStandAvailability`
+- `tcl.py` — Pure helpers for TCL data: `filter_tcl_passages_by_line`, `filter_tcl_passages_by_stop`, `filter_tcl_passages_by_lines_stops`, `find_tcl_stop_by_id`, `sort_tcl_passages_by_time`
+- `velov.py` — Pure helpers for Vélo'v data: `find_velov_station_by_id`, `find_velov_stations_by_ids`
 
 ## Conventions
 
