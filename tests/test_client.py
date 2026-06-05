@@ -8,11 +8,13 @@ from data_grand_lyon_ha import (
     DataGrandLyonClient,
     TclPassage,
     TclPassageType,
+    TclStop,
     VelovAvailabilityLevel,
     VelovBikeStandAvailability,
     VelovStation,
     VelovStationStatus,
 )
+from data_grand_lyon_ha.client import _parse_tcl_desserte
 
 SAMPLE_TCL_RESPONSE = {
     "fields": [],
@@ -53,6 +55,58 @@ SAMPLE_TCL_RESPONSE = {
             "coursetheorique": "302_302B-0100V_00801001",
             "gid": 3,
             "last_update_fme": "2026-04-10 16:27:01",
+        },
+    ],
+}
+
+SAMPLE_TCL_STOPS_RESPONSE = {
+    "fields": [],
+    "nb_results": 3,
+    "values": [
+        {
+            "id": 1041,
+            "gid": 31977,
+            "adresse": "111 AVENUE PAUL SANTY",
+            "ascenseur": False,
+            "commune": "Lyon 8e Arrondissement",
+            "desserte": "C25:R",
+            "escalator": False,
+            "insee": "69388",
+            "last_update": "2026-06-05 01:46:00",
+            "lat": 45.727741988888,
+            "lon": 4.878116954554,
+            "nom": "Général André",
+            "pmr": True,
+        },
+        {
+            "id": 21844,
+            "gid": 37682,
+            "adresse": None,
+            "ascenseur": None,
+            "commune": None,
+            "desserte": "JD617:R,JD621:R",
+            "escalator": None,
+            "insee": None,
+            "last_update": None,
+            "lat": 45.801439,
+            "lon": 4.396345,
+            "nom": "Villecheneve Montlit",
+            "pmr": False,
+        },
+        {
+            "id": 30202,
+            "gid": 40200,
+            "adresse": "Rue Exemple",
+            "ascenseur": True,
+            "commune": "Lyon",
+            "desserte": "204:R,215:R,JD473:R",
+            "escalator": True,
+            "insee": "69123",
+            "last_update": "2026-06-05 01:46:00",
+            "lat": 45.75,
+            "lon": 4.85,
+            "nom": "Exemple",
+            "pmr": True,
         },
     ],
 }
@@ -214,3 +268,45 @@ async def test_get_velov_stations_no_auth():
 
     _, kwargs = session.get.call_args
     assert "auth" not in kwargs
+
+
+@pytest.mark.asyncio
+async def test_get_tcl_stops_returns_all():
+    client = _make_client_with_response(SAMPLE_TCL_STOPS_RESPONSE)
+    stops = await client.get_tcl_stops()
+
+    assert len(stops) == 3
+    assert stops[0] == TclStop(
+        id=1041,
+        gid=31977,
+        adresse="111 AVENUE PAUL SANTY",
+        ascenseur=False,
+        commune="Lyon 8e Arrondissement",
+        desserte=["C25"],
+        escalator=False,
+        insee="69388",
+        last_update=datetime.fromisoformat("2026-06-05 01:46:00"),
+        lat=45.727741988888,
+        lon=4.878116954554,
+        nom="Général André",
+        pmr=True,
+    )
+
+
+@pytest.mark.asyncio
+async def test_get_tcl_stops_null_last_update():
+    client = _make_client_with_response(SAMPLE_TCL_STOPS_RESPONSE)
+    stops = await client.get_tcl_stops()
+
+    assert stops[1].id == 21844
+    assert stops[1].last_update is None
+    assert stops[1].adresse is None
+
+
+@pytest.mark.asyncio
+async def test_get_tcl_stops_desserte_parsed():
+    client = _make_client_with_response(SAMPLE_TCL_STOPS_RESPONSE)
+    stops = await client.get_tcl_stops()
+
+    assert stops[1].desserte == ["JD617", "JD621"]
+    assert stops[2].desserte == ["204", "215", "JD473"]

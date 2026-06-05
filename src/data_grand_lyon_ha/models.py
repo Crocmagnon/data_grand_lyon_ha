@@ -26,6 +26,24 @@ class TclPassage:
     course_theorique: str
 
 
+@dataclass(frozen=True)
+class TclStop:
+    """A single transit network stop."""
+    id: int
+    gid: int
+    adresse: str
+    ascenseur: bool
+    commune: str
+    desserte: list[str]
+    escalator: bool
+    insee: str
+    last_update: datetime | None
+    lat: float
+    lon: float
+    nom: str
+    pmr: bool
+
+
 class VelovStationStatus(StrEnum):
     """Operational status of a Vélo'v station."""
 

@@ -21,7 +21,7 @@ uv add data-grand-lyon-ha
 ```python
 import asyncio
 import aiohttp
-from data_grand_lyon_ha import DataGrandLyonClient, TclPassageType
+from data_grand_lyon_ha import DataGrandLyonClient, TclPassageType, find_tcl_stop_by_id
 
 async def main():
     async with aiohttp.ClientSession() as session:
@@ -38,6 +38,12 @@ async def main():
         all_passages = await client.get_tcl_stop_passages(30101)
         for p in all_passages:
             print(f"{p.ligne} → {p.direction} in {p.delai_passage} [{p.type}]")
+
+        # All TCL stops, then look one up by ID
+        stops = await client.get_tcl_stops()
+        stop = find_tcl_stop_by_id(stops, 1041)
+        if stop:
+            print(f"{stop.nom} ({stop.commune}) — lines: {stop.desserte}")
 
 asyncio.run(main())
 ```

@@ -1,6 +1,6 @@
 """Pure filtering and sorting functions for TCL passage data."""
 
-from .models import TclPassage
+from .models import TclPassage, TclStop
 
 
 def filter_tcl_passages_by_line(
@@ -15,6 +15,16 @@ def filter_tcl_passages_by_stop(
 ) -> list[TclPassage]:
     """Keep only passages for a given stop ID."""
     return [p for p in passages if p.id == stop_id]
+
+
+def find_tcl_stop_by_id(
+    stops: list[TclStop], stop_id: int
+) -> TclStop | None:
+    """Find a stop by its ID, or return None if not found."""
+    for stop in stops:
+        if stop.id == stop_id:
+            return stop
+    return None
 
 
 def filter_tcl_passages_by_lines_stops(

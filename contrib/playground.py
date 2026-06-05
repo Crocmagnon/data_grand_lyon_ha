@@ -12,6 +12,7 @@ from data_grand_lyon_ha import (
     find_velov_station_by_id,
     sort_tcl_passages_by_time,
 )
+from data_grand_lyon_ha.tcl import find_tcl_stop_by_id
 
 
 async def main() -> None:
@@ -25,6 +26,11 @@ async def main() -> None:
 
         ligne = "37"
         arret = 290
+
+        all_stops = await client.get_tcl_stops()
+        print("=== Stops - Total:", len(all_stops))
+        stop = find_tcl_stop_by_id(all_stops, arret)
+        print("Found stop: ", stop)
 
         print(f"=== Passages - Ligne {ligne}, arrêt {arret} ===")
         passages = filter_tcl_passages_by_line(all_passages, ligne)

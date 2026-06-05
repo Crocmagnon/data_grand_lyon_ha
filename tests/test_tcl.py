@@ -3,9 +3,11 @@ from datetime import datetime
 from data_grand_lyon_ha import (
     TclPassage,
     TclPassageType,
+    TclStop,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_lines_stops,
     filter_tcl_passages_by_stop,
+    find_tcl_stop_by_id,
     sort_tcl_passages_by_time,
 )
 
@@ -109,6 +111,55 @@ def test_filter_by_lines_stops_partial_match():
     )
     assert len(result[("A", 30101)]) == 3
     assert result[("C", 12345)] == []
+
+
+STOPS = [
+    TclStop(
+        id=1041,
+        gid=31977,
+        adresse="111 AVENUE PAUL SANTY",
+        ascenseur=False,
+        commune="Lyon 8e Arrondissement",
+        desserte=["C25"],
+        escalator=False,
+        insee="69388",
+        last_update=datetime(2026, 6, 5, 1, 46, 0),
+        lat=45.727741988888,
+        lon=4.878116954554,
+        nom="Général André",
+        pmr=True,
+    ),
+    TclStop(
+        id=21844,
+        gid=37682,
+        adresse=None,
+        ascenseur=None,
+        commune=None,
+        desserte=["JD617", "JD621"],
+        escalator=None,
+        insee=None,
+        last_update=None,
+        lat=45.801439,
+        lon=4.396345,
+        nom="Villecheneve Montlit",
+        pmr=False,
+    ),
+]
+
+
+def test_find_stop_by_id_found():
+    result = find_tcl_stop_by_id(STOPS, 1041)
+    assert result is not None
+    assert result.id == 1041
+    assert result.nom == "Général André"
+
+
+def test_find_stop_by_id_not_found():
+    assert find_tcl_stop_by_id(STOPS, 99999) is None
+
+
+def test_find_stop_by_id_empty_list():
+    assert find_tcl_stop_by_id([], 1041) is None
 
 
 def test_composing_filters():
