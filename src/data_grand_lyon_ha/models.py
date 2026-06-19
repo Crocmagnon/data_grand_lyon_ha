@@ -101,6 +101,21 @@ class TclParkAndRide:
     last_update_fme: datetime | None
 
 
+@dataclass(frozen=True)
+class TclLinePictogram:
+    """Pictogram filenames for a single TCL line.
+
+    Each field is the file name of an SVG pictogram (not the image itself):
+    ``picto_mode`` is the transport mode icon, ``picto_ligne`` the line number
+    badge, and ``picto_complet`` the full pictogram (mode + line number).
+    """
+
+    code_ligne: str
+    picto_mode: str
+    picto_ligne: str
+    picto_complet: str
+
+
 class VelovStationStatus(StrEnum):
     """Operational status of a Vélo'v station."""
 

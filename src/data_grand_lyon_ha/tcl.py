@@ -1,9 +1,11 @@
 """Pure filtering and sorting functions for TCL passage data."""
 
+import io
+import zipfile
 from datetime import datetime
 from enum import IntEnum
 
-from .models import TclAlert, TclParkAndRide, TclPassage, TclStop
+from .models import TclAlert, TclLinePictogram, TclParkAndRide, TclPassage, TclStop
 
 
 def filter_tcl_passages_by_line(
@@ -36,6 +38,29 @@ def find_tcl_park_and_ride_by_id(
         if park.id == park_id:
             return park
     return None
+
+
+def find_tcl_line_pictogram_by_code(
+    lines: list[TclLinePictogram], code: str
+) -> TclLinePictogram | None:
+    """Find a line pictogram entry by its line code, or return None if not found."""
+    for line in lines:
+        if line.code_ligne == code:
+            return line
+    return None
+
+
+def extract_tcl_pictogram_from_zip(zip_bytes: bytes, filename: str) -> bytes | None:
+    """Extract a single pictogram SVG from the pictograms ZIP archive.
+
+    Returns the file's raw bytes (suitable for Home Assistant image entities),
+    or None if the archive does not contain ``filename``.
+    """
+    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as archive:
+        try:
+            return archive.read(filename)
+        except KeyError:
+            return None
 
 
 def filter_tcl_passages_by_lines_stops(

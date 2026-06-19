@@ -38,8 +38,8 @@ TCL_USERNAME=xxx TCL_PASSWORD=yyy uv run python contrib/playground.py
 ### Key Modules
 
 - `client.py` — `DataGrandLyonClient` class: async HTTP client for the Grand Lyon data API (`https://data.grandlyon.com/fr/datapusher/ws/rdata`)
-- `models.py` — Data models: `TclPassage`, `TclPassageType`, `TclStop`, `TclParkAndRide`, `TclAlert`, `TclAlertType`, `TclAlertSeverityType`, `VelovStation`, `VelovStationStatus`, `VelovAvailabilityLevel`, `VelovBikeStandAvailability`
-- `tcl.py` — Pure helpers for TCL data: `filter_tcl_passages_by_line`, `filter_tcl_passages_by_stop`, `filter_tcl_passages_by_lines_stops`, `find_tcl_stop_by_id`, `find_tcl_park_and_ride_by_id`, `sort_tcl_passages_by_time`, and for alerts `filter_tcl_alerts_by_line`, `filter_tcl_active_alerts`, `tcl_alert_relevance`/`TclAlertRelevance`, `sort_tcl_alerts_by_relevance`
+- `models.py` — Data models: `TclPassage`, `TclPassageType`, `TclStop`, `TclParkAndRide`, `TclLinePictogram`, `TclAlert`, `TclAlertType`, `TclAlertSeverityType`, `VelovStation`, `VelovStationStatus`, `VelovAvailabilityLevel`, `VelovBikeStandAvailability`
+- `tcl.py` — Pure helpers for TCL data: `filter_tcl_passages_by_line`, `filter_tcl_passages_by_stop`, `filter_tcl_passages_by_lines_stops`, `find_tcl_stop_by_id`, `find_tcl_park_and_ride_by_id`, `find_tcl_line_pictogram_by_code`, `extract_tcl_pictogram_from_zip`, `sort_tcl_passages_by_time`, and for alerts `filter_tcl_alerts_by_line`, `filter_tcl_active_alerts`, `tcl_alert_relevance`/`TclAlertRelevance`, `sort_tcl_alerts_by_relevance`
 - `velov.py` — Pure helpers for Vélo'v data: `find_velov_station_by_id`, `find_velov_stations_by_ids`
 
 ## Conventions

@@ -24,9 +24,11 @@ from datetime import datetime
 import aiohttp
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    extract_tcl_pictogram_from_zip,
     filter_tcl_alerts_by_line,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_stop,
+    find_tcl_line_pictogram_by_code,
     find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
     find_velov_station_by_id,
@@ -76,6 +78,16 @@ async def main():
         alerts = filter_tcl_alerts_by_line(all_alerts, "27")
         for a in sort_tcl_alerts_by_relevance(alerts, datetime.now()):
             print(f"[{a.type}] {a.titre} ({a.debut:%d/%m %H:%M} → {a.fin:%d/%m %H:%M})")
+
+        # TCL line pictograms: list lines, then extract one line's SVG as bytes
+        # (e.g. for a Home Assistant image entity).
+        lines = await client.get_tcl_line_pictograms()
+        line = find_tcl_line_pictogram_by_code(lines, "10")
+        if line:
+            zip_bytes = await client.get_tcl_line_pictograms_zip()
+            svg = extract_tcl_pictogram_from_zip(zip_bytes, line.picto_complet)
+            if svg:
+                print(f"Pictogram for line 10: {len(svg)} bytes")
 
 asyncio.run(main())
 ```

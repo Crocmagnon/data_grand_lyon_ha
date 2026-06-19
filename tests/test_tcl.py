@@ -1,3 +1,5 @@
+import io
+import zipfile
 from datetime import datetime
 
 from data_grand_lyon_ha import (
@@ -5,15 +7,18 @@ from data_grand_lyon_ha import (
     TclAlertRelevance,
     TclAlertSeverityType,
     TclAlertType,
+    TclLinePictogram,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
     TclStop,
+    extract_tcl_pictogram_from_zip,
     filter_tcl_active_alerts,
     filter_tcl_alerts_by_line,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_lines_stops,
     filter_tcl_passages_by_stop,
+    find_tcl_line_pictogram_by_code,
     find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
     sort_tcl_alerts_by_relevance,
@@ -209,6 +214,58 @@ def test_find_park_and_ride_by_id_not_found():
 
 def test_find_park_and_ride_by_id_empty_list():
     assert find_tcl_park_and_ride_by_id([], "VAI2") is None
+
+
+LINE_PICTOGRAMS = [
+    TclLinePictogram(
+        code_ligne="10",
+        picto_mode="mode_bus.svg",
+        picto_ligne="10_ligne.svg",
+        picto_complet="10.svg",
+    ),
+    TclLinePictogram(
+        code_ligne="A",
+        picto_mode="mode_metro.svg",
+        picto_ligne="A_ligne.svg",
+        picto_complet="A.svg",
+    ),
+]
+
+
+def test_find_line_pictogram_by_code_found():
+    result = find_tcl_line_pictogram_by_code(LINE_PICTOGRAMS, "A")
+    assert result is not None
+    assert result.code_ligne == "A"
+    assert result.picto_complet == "A.svg"
+
+
+def test_find_line_pictogram_by_code_not_found():
+    assert find_tcl_line_pictogram_by_code(LINE_PICTOGRAMS, "999") is None
+
+
+def test_find_line_pictogram_by_code_empty_list():
+    assert find_tcl_line_pictogram_by_code([], "10") is None
+
+
+def _make_pictograms_zip(files: dict[str, bytes]) -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        for name, content in files.items():
+            archive.writestr(name, content)
+    return buffer.getvalue()
+
+
+def test_extract_pictogram_from_zip_found():
+    svg = b"<svg>10</svg>"
+    zip_bytes = _make_pictograms_zip({"10.svg": svg, "A.svg": b"<svg>A</svg>"})
+
+    result = extract_tcl_pictogram_from_zip(zip_bytes, "10.svg")
+    assert result == svg
+
+
+def test_extract_pictogram_from_zip_not_found():
+    zip_bytes = _make_pictograms_zip({"10.svg": b"<svg>10</svg>"})
+    assert extract_tcl_pictogram_from_zip(zip_bytes, "999.svg") is None
 
 
 def test_composing_filters():

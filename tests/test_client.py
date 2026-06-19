@@ -9,6 +9,7 @@ from data_grand_lyon_ha import (
     TclAlert,
     TclAlertSeverityType,
     TclAlertType,
+    TclLinePictogram,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
@@ -248,6 +249,14 @@ SAMPLE_TCL_ALERTS_RESPONSE = {
 }
 
 
+SAMPLE_PICTOGRAMS_CSV = (
+    "code_ligne;picto_mode;picto_ligne;picto_complet\n"
+    "10;mode_bus.svg;10_ligne.svg;10.svg\n"
+    "104A;mode_bus.svg;104A_ligne.svg;104A.svg\n"
+    "A;mode_metro.svg;A_ligne.svg;A.svg\n"
+)
+
+
 def _make_client_with_response(response_json: dict) -> DataGrandLyonClient:
     mock_response = AsyncMock()
     mock_response.raise_for_status = MagicMock()
@@ -259,6 +268,32 @@ def _make_client_with_response(response_json: dict) -> DataGrandLyonClient:
     session.get = MagicMock(return_value=mock_response)
 
     return DataGrandLyonClient(session)
+
+
+def _make_client_with_text(text: str) -> tuple[DataGrandLyonClient, MagicMock]:
+    mock_response = AsyncMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.text = AsyncMock(return_value=text)
+    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_response.__aexit__ = AsyncMock(return_value=False)
+
+    session = MagicMock(spec=aiohttp.ClientSession)
+    session.get = MagicMock(return_value=mock_response)
+
+    return DataGrandLyonClient(session), session
+
+
+def _make_client_with_bytes(data: bytes) -> tuple[DataGrandLyonClient, MagicMock]:
+    mock_response = AsyncMock()
+    mock_response.raise_for_status = MagicMock()
+    mock_response.read = AsyncMock(return_value=data)
+    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_response.__aexit__ = AsyncMock(return_value=False)
+
+    session = MagicMock(spec=aiohttp.ClientSession)
+    session.get = MagicMock(return_value=mock_response)
+
+    return DataGrandLyonClient(session), session
 
 
 def test_client_without_credentials():
@@ -448,3 +483,33 @@ async def test_get_tcl_park_and_rides_null_last_update():
     assert parks[1].last_update_fme == datetime.fromisoformat(
         "2026-06-19 08:14:02+02:00"
     )
+
+
+@pytest.mark.asyncio
+async def test_get_tcl_line_pictograms_returns_all():
+    client, session = _make_client_with_text(SAMPLE_PICTOGRAMS_CSV)
+    lines = await client.get_tcl_line_pictograms()
+
+    assert len(lines) == 3
+    assert lines[0] == TclLinePictogram(
+        code_ligne="10",
+        picto_mode="mode_bus.svg",
+        picto_ligne="10_ligne.svg",
+        picto_complet="10.svg",
+    )
+    assert lines[2].code_ligne == "A"
+    assert lines[2].picto_complet == "A.svg"
+
+    (url,), _ = session.get.call_args
+    assert url.endswith("Liste_pictogrammes_lignes.csv")
+
+
+@pytest.mark.asyncio
+async def test_get_tcl_line_pictograms_zip_returns_bytes():
+    client, session = _make_client_with_bytes(b"PK\x03\x04 fake zip")
+    data = await client.get_tcl_line_pictograms_zip()
+
+    assert data == b"PK\x03\x04 fake zip"
+
+    (url,), _ = session.get.call_args
+    assert url.endswith("Pictogrammes_lignes_complets.zip")

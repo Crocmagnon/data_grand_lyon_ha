@@ -8,9 +8,11 @@ import aiohttp
 
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    extract_tcl_pictogram_from_zip,
     filter_tcl_alerts_by_line,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_stop,
+    find_tcl_line_pictogram_by_code,
     find_tcl_park_and_ride_by_id,
     find_velov_station_by_id,
     sort_tcl_alerts_by_relevance,
@@ -88,6 +90,23 @@ async def main() -> None:
                 f"  [{a.type}] {a.titre} | {a.mode} "
                 f"({a.debut:%d/%m %H:%M} → {a.fin:%d/%m %H:%M})"
             )
+
+        print()
+        picto_line = "10"
+        print(f"=== Pictogrammes de lignes (ligne {picto_line}) ===")
+        lines = await client.get_tcl_line_pictograms()
+        print("Total lignes:", len(lines))
+        line = find_tcl_line_pictogram_by_code(lines, picto_line)
+        if line:
+            print(f"  Fichier picto complet: {line.picto_complet}")
+            zip_bytes = await client.get_tcl_line_pictograms_zip()
+            svg = extract_tcl_pictogram_from_zip(zip_bytes, line.picto_complet)
+            if svg:
+                print(f"  SVG extrait: {len(svg)} octets")
+            else:
+                print(f"  {line.picto_complet} introuvable dans l'archive")
+        else:
+            print(f"  Ligne {picto_line} introuvable")
 
 
 if __name__ == "__main__":
