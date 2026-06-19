@@ -25,6 +25,7 @@ from data_grand_lyon_ha import (
     DataGrandLyonClient,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_stop,
+    find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
     find_velov_station_by_id,
     sort_tcl_passages_by_time,
@@ -56,6 +57,14 @@ async def main():
         if station:
             print(
                 f"{station.name}: {station.available_bikes}/{station.bike_stands} bikes"
+            )
+
+        # TCL park-and-rides (P+R): fetch all, then look one up by ID
+        parks = await client.get_tcl_park_and_rides()
+        park = find_tcl_park_and_ride_by_id(parks, "VAI2")
+        if park:
+            print(
+                f"{park.nom}: {park.nb_tot_place_dispo}/{park.capacite} places"
             )
 
 asyncio.run(main())

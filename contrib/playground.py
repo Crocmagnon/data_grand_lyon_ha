@@ -9,6 +9,7 @@ from data_grand_lyon_ha import (
     DataGrandLyonClient,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_stop,
+    find_tcl_park_and_ride_by_id,
     find_velov_station_by_id,
     sort_tcl_passages_by_time,
 )
@@ -53,6 +54,20 @@ async def main() -> None:
             print(f"  Free stands: {station.available_bike_stands}")
         else:
             print(f"  Station {station_id} not found")
+
+        print()
+        park_id = "VAI2"
+        print(f"=== Park-and-ride {park_id} ===")
+        all_parks = await client.get_tcl_park_and_rides()
+        print("Total P+R:", len(all_parks))
+        park = find_tcl_park_and_ride_by_id(all_parks, park_id)
+        if park:
+            print(f"  {park.nom}")
+            print(f"  Places dispo: {park.nb_tot_place_dispo}/{park.capacite}")
+            print(f"  Places handi: {park.place_handi} | Surveillé: {park.p_surv}")
+            print(f"  Horaires: {park.horaires}")
+        else:
+            print(f"  Park-and-ride {park_id} not found")
 
 
 if __name__ == "__main__":

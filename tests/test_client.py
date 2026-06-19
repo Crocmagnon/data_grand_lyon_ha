@@ -6,6 +6,7 @@ import pytest
 
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    TclParkAndRide,
     TclPassage,
     TclPassageType,
     TclStop,
@@ -171,6 +172,38 @@ SAMPLE_VELOV_RESPONSE = {
 }
 
 
+SAMPLE_PARK_AND_RIDE_RESPONSE = {
+    "fields": [],
+    "nb_results": 3,
+    "values": [
+        {
+            "capacite": 730,
+            "gid": 609,
+            "horaires": "Ouvert de 4h30 à 1h du lundi au jeudi",
+            "id": "VAI2",
+            "last_update": "2026-06-19 08:11:00+02:00",
+            "last_update_fme": "2026-06-19 08:14:02+02:00",
+            "nb_tot_place_dispo": 609,
+            "nom": "Vaise 2",
+            "p_surv": True,
+            "place_handi": 18,
+        },
+        {
+            "capacite": 655,
+            "gid": 606,
+            "horaires": "Ouvert de 4h30 à 1h00 du lundi au jeudi",
+            "id": "GOR",
+            "last_update": None,
+            "last_update_fme": "2026-06-19 08:14:02+02:00",
+            "nb_tot_place_dispo": 0,
+            "nom": "Gorge de Loup",
+            "p_surv": False,
+            "place_handi": 19,
+        },
+    ],
+}
+
+
 def _make_client_with_response(response_json: dict) -> DataGrandLyonClient:
     mock_response = AsyncMock()
     mock_response.raise_for_status = MagicMock()
@@ -310,3 +343,36 @@ async def test_get_tcl_stops_desserte_parsed():
 
     assert stops[1].desserte == ["JD617", "JD621"]
     assert stops[2].desserte == ["204", "215", "JD473"]
+
+
+@pytest.mark.asyncio
+async def test_get_tcl_park_and_rides_returns_all():
+    client = _make_client_with_response(SAMPLE_PARK_AND_RIDE_RESPONSE)
+    parks = await client.get_tcl_park_and_rides()
+
+    assert len(parks) == 2
+    assert parks[0] == TclParkAndRide(
+        id="VAI2",
+        gid=609,
+        nom="Vaise 2",
+        capacite=730,
+        place_handi=18,
+        horaires="Ouvert de 4h30 à 1h du lundi au jeudi",
+        p_surv=True,
+        nb_tot_place_dispo=609,
+        last_update=datetime.fromisoformat("2026-06-19 08:11:00+02:00"),
+        last_update_fme=datetime.fromisoformat("2026-06-19 08:14:02+02:00"),
+    )
+    assert parks[1].id == "GOR"
+    assert parks[1].nb_tot_place_dispo == 0
+
+
+@pytest.mark.asyncio
+async def test_get_tcl_park_and_rides_null_last_update():
+    client = _make_client_with_response(SAMPLE_PARK_AND_RIDE_RESPONSE)
+    parks = await client.get_tcl_park_and_rides()
+
+    assert parks[1].last_update is None
+    assert parks[1].last_update_fme == datetime.fromisoformat(
+        "2026-06-19 08:14:02+02:00"
+    )

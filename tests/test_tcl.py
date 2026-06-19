@@ -1,12 +1,14 @@
 from datetime import datetime
 
 from data_grand_lyon_ha import (
+    TclParkAndRide,
     TclPassage,
     TclPassageType,
     TclStop,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_lines_stops,
     filter_tcl_passages_by_stop,
+    find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
     sort_tcl_passages_by_time,
 )
@@ -160,6 +162,49 @@ def test_find_stop_by_id_not_found():
 
 def test_find_stop_by_id_empty_list():
     assert find_tcl_stop_by_id([], 1041) is None
+
+
+PARKS = [
+    TclParkAndRide(
+        id="VAI2",
+        gid=609,
+        nom="Vaise 2",
+        capacite=730,
+        place_handi=18,
+        horaires="Ouvert de 4h30 à 1h du lundi au jeudi",
+        p_surv=True,
+        nb_tot_place_dispo=609,
+        last_update=datetime.fromisoformat("2026-06-19 08:11:00+02:00"),
+        last_update_fme=datetime.fromisoformat("2026-06-19 08:14:02+02:00"),
+    ),
+    TclParkAndRide(
+        id="GOR",
+        gid=606,
+        nom="Gorge de Loup",
+        capacite=655,
+        place_handi=19,
+        horaires="Ouvert de 4h30 à 1h00 du lundi au jeudi",
+        p_surv=False,
+        nb_tot_place_dispo=0,
+        last_update=None,
+        last_update_fme=datetime.fromisoformat("2026-06-19 08:14:02+02:00"),
+    ),
+]
+
+
+def test_find_park_and_ride_by_id_found():
+    result = find_tcl_park_and_ride_by_id(PARKS, "VAI2")
+    assert result is not None
+    assert result.id == "VAI2"
+    assert result.nom == "Vaise 2"
+
+
+def test_find_park_and_ride_by_id_not_found():
+    assert find_tcl_park_and_ride_by_id(PARKS, "XXXX") is None
+
+
+def test_find_park_and_ride_by_id_empty_list():
+    assert find_tcl_park_and_ride_by_id([], "VAI2") is None
 
 
 def test_composing_filters():

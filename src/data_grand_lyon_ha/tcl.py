@@ -1,6 +1,6 @@
 """Pure filtering and sorting functions for TCL passage data."""
 
-from .models import TclPassage, TclStop
+from .models import TclParkAndRide, TclPassage, TclStop
 
 
 def filter_tcl_passages_by_line(
@@ -24,6 +24,16 @@ def find_tcl_stop_by_id(
     for stop in stops:
         if stop.id == stop_id:
             return stop
+    return None
+
+
+def find_tcl_park_and_ride_by_id(
+    parks: list[TclParkAndRide], park_id: str
+) -> TclParkAndRide | None:
+    """Find a park-and-ride by its ID, or return None if not found."""
+    for park in parks:
+        if park.id == park_id:
+            return park
     return None
 
 

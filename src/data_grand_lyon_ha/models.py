@@ -44,6 +44,22 @@ class TclStop:
     pmr: bool
 
 
+@dataclass(frozen=True)
+class TclParkAndRide:
+    """A single TCL park-and-ride (P+R) facility with real-time availability."""
+
+    id: str
+    gid: int
+    nom: str
+    capacite: int
+    place_handi: int
+    horaires: str
+    p_surv: bool
+    nb_tot_place_dispo: int
+    last_update: datetime | None
+    last_update_fme: datetime | None
+
+
 class VelovStationStatus(StrEnum):
     """Operational status of a Vélo'v station."""
 

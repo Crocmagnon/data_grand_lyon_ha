@@ -5,6 +5,7 @@ from datetime import datetime
 import aiohttp
 
 from .models import (
+    TclParkAndRide,
     TclPassage,
     TclPassageType,
     TclStop,
@@ -89,6 +90,31 @@ class DataGrandLyonClient:
                 nom=v["nom"],
                 pmr=v["pmr"],
                 desserte=_parse_tcl_desserte(v["desserte"]),
+            )
+            for v in data["values"]
+        ]
+
+    async def get_tcl_park_and_rides(self) -> list[TclParkAndRide]:
+        """Retrieve all TCL park-and-ride (P+R) facilities from the API."""
+        url = f"{self.BASE_URL}/tcl_sytral.tclparcrelaistr/all.json"
+        async with self._session.get(
+            url, params={"maxfeatures": "-1"}, auth=self._auth
+        ) as resp:
+            resp.raise_for_status()
+            data = await resp.json()
+
+        return [
+            TclParkAndRide(
+                id=v["id"],
+                gid=v["gid"],
+                nom=v["nom"],
+                capacite=v["capacite"],
+                place_handi=v["place_handi"],
+                horaires=v["horaires"],
+                p_surv=v["p_surv"],
+                nb_tot_place_dispo=v["nb_tot_place_dispo"],
+                last_update=datetime.fromisoformat(v["last_update"]) if v["last_update"] else None,
+                last_update_fme=datetime.fromisoformat(v["last_update_fme"]) if v["last_update_fme"] else None,
             )
             for v in data["values"]
         ]
