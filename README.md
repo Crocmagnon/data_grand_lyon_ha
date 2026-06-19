@@ -20,14 +20,17 @@ uv add data-grand-lyon-ha
 
 ```python
 import asyncio
+from datetime import datetime
 import aiohttp
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    filter_tcl_alerts_by_line,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_stop,
     find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
     find_velov_station_by_id,
+    sort_tcl_alerts_by_relevance,
     sort_tcl_passages_by_time,
 )
 
@@ -66,6 +69,13 @@ async def main():
             print(
                 f"{park.nom}: {park.nb_tot_place_dispo}/{park.capacite} places"
             )
+
+        # TCL traffic alerts: fetch all, filter by line, then sort most-relevant-first
+        # (ongoing or starting today come before later days; ended alerts last).
+        all_alerts = await client.get_tcl_alerts()
+        alerts = filter_tcl_alerts_by_line(all_alerts, "27")
+        for a in sort_tcl_alerts_by_relevance(alerts, datetime.now()):
+            print(f"[{a.type}] {a.titre} ({a.debut:%d/%m %H:%M} → {a.fin:%d/%m %H:%M})")
 
 asyncio.run(main())
 ```

@@ -5,6 +5,9 @@ from datetime import datetime
 import aiohttp
 
 from .models import (
+    TclAlert,
+    TclAlertSeverityType,
+    TclAlertType,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
@@ -92,6 +95,38 @@ class DataGrandLyonClient:
                 nom=v["nom"],
                 pmr=v["pmr"],
                 desserte=_parse_tcl_desserte(v["desserte"]),
+            )
+            for v in data["values"]
+        ]
+
+    async def get_tcl_alerts(self) -> list[TclAlert]:
+        """Retrieve all TCL traffic alerts from the API."""
+        url = f"{self.BASE_URL}/tcl_sytral.tclalertetrafic_2/all.json"
+        async with self._session.get(
+            url, params={"maxfeatures": "-1"}, auth=self._auth
+        ) as resp:
+            resp.raise_for_status()
+            data = await resp.json()
+
+        return [
+            TclAlert(
+                type=TclAlertType(v["type"]),
+                cause=v["cause"],
+                debut=datetime.strptime(v["debut"], _PASSAGE_DATETIME_FORMAT),
+                fin=datetime.strptime(v["fin"], _PASSAGE_DATETIME_FORMAT),
+                mode=v["mode"],
+                ligne_com=v["ligne_com"],
+                ligne_cli=v["ligne_cli"],
+                titre=v["titre"],
+                message=v["message"],
+                last_update_fme=datetime.strptime(
+                    v["last_update_fme"], _PASSAGE_DATETIME_FORMAT
+                ),
+                n=v["n"],
+                type_severite=TclAlertSeverityType(v["typeseverite"]),
+                niveau_severite=v["niveauseverite"],
+                type_objet=v["typeobjet"],
+                liste_objet=v["listeobjet"],
             )
             for v in data["values"]
         ]

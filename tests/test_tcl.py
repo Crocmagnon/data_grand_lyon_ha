@@ -1,16 +1,24 @@
 from datetime import datetime
 
 from data_grand_lyon_ha import (
+    TclAlert,
+    TclAlertRelevance,
+    TclAlertSeverityType,
+    TclAlertType,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
     TclStop,
+    filter_tcl_active_alerts,
+    filter_tcl_alerts_by_line,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_lines_stops,
     filter_tcl_passages_by_stop,
     find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
+    sort_tcl_alerts_by_relevance,
     sort_tcl_passages_by_time,
+    tcl_alert_relevance,
 )
 
 PASSAGES = [
@@ -215,3 +223,124 @@ def test_composing_filters():
     assert result[1].course_theorique == "course_1"
     assert result[2].course_theorique == "course_3"
     assert result[0].heure_passage < result[1].heure_passage
+
+
+# Reference instant: 2026-06-19 at 06:30 (the user's example).
+NOW = datetime(2026, 6, 19, 6, 30, 0)
+
+
+def _alert(
+    titre: str,
+    debut: datetime,
+    fin: datetime,
+    *,
+    ligne_cli: str = "A",
+    niveau_severite: int = 20,
+    type: TclAlertType = TclAlertType.DISRUPTION,
+    type_severite: TclAlertSeverityType = TclAlertSeverityType.SIGNIFICANT_DELAYS,
+) -> TclAlert:
+    return TclAlert(
+        type=type,
+        cause="travaux",
+        debut=debut,
+        fin=fin,
+        mode="Bus",
+        ligne_com=ligne_cli,
+        ligne_cli=ligne_cli,
+        titre=titre,
+        message="message",
+        last_update_fme=NOW,
+        n=0,
+        type_severite=type_severite,
+        niveau_severite=niveau_severite,
+        type_objet="line",
+        liste_objet=ligne_cli,
+    )
+
+
+# Ongoing disruption (started yesterday, ends next week).
+ALERT_ONGOING = _alert(
+    "ongoing",
+    datetime(2026, 6, 18, 4, 30, 0),
+    datetime(2026, 6, 25, 1, 30, 0),
+    niveau_severite=20,
+)
+# Ongoing, started earlier today — same bucket/severity, earlier-but-later debut.
+ALERT_ONGOING_TODAY = _alert(
+    "ongoing-today",
+    datetime(2026, 6, 19, 5, 0, 0),
+    datetime(2026, 6, 19, 23, 0, 0),
+    niveau_severite=20,
+)
+# Today but not started yet (starts at 07:00, now is 06:30) — still CURRENT.
+ALERT_TODAY_NOT_STARTED = _alert(
+    "today-not-started",
+    datetime(2026, 6, 19, 7, 0, 0),
+    datetime(2026, 6, 19, 20, 0, 0),
+    niveau_severite=30,
+    type=TclAlertType.INFORMATION,
+    type_severite=TclAlertSeverityType.OTHER_EFFECT,
+)
+# Starts on a later day.
+ALERT_UPCOMING = _alert(
+    "upcoming",
+    datetime(2026, 6, 21, 4, 30, 0),
+    datetime(2026, 6, 22, 1, 30, 0),
+    ligne_cli="27",
+)
+# Already finished.
+ALERT_ENDED = _alert(
+    "ended",
+    datetime(2026, 6, 10, 4, 30, 0),
+    datetime(2026, 6, 15, 1, 30, 0),
+)
+
+ALERTS = [
+    ALERT_UPCOMING,
+    ALERT_ENDED,
+    ALERT_TODAY_NOT_STARTED,
+    ALERT_ONGOING,
+    ALERT_ONGOING_TODAY,
+]
+
+
+def test_alert_relevance_ongoing():
+    assert tcl_alert_relevance(ALERT_ONGOING, NOW) == TclAlertRelevance.CURRENT
+
+
+def test_alert_relevance_today_not_started():
+    assert (
+        tcl_alert_relevance(ALERT_TODAY_NOT_STARTED, NOW) == TclAlertRelevance.CURRENT
+    )
+
+
+def test_alert_relevance_upcoming():
+    assert tcl_alert_relevance(ALERT_UPCOMING, NOW) == TclAlertRelevance.UPCOMING
+
+
+def test_alert_relevance_ended():
+    assert tcl_alert_relevance(ALERT_ENDED, NOW) == TclAlertRelevance.ENDED
+
+
+def test_filter_alerts_by_line():
+    result = filter_tcl_alerts_by_line(ALERTS, "27")
+    assert result == [ALERT_UPCOMING]
+
+
+def test_filter_active_alerts_excludes_ended():
+    result = filter_tcl_active_alerts(ALERTS, NOW)
+    assert ALERT_ENDED not in result
+    assert len(result) == 4
+
+
+def test_sort_alerts_by_relevance():
+    result = sort_tcl_alerts_by_relevance(ALERTS, NOW)
+
+    # CURRENT first (disruptions before info), then UPCOMING, ENDED last.
+    assert result == [
+        ALERT_ONGOING,  # current, severity 20, earliest debut
+        ALERT_ONGOING_TODAY,  # current, severity 20, later debut
+        ALERT_TODAY_NOT_STARTED,  # current, severity 30 (info) -> after disruptions
+        ALERT_UPCOMING,  # upcoming
+        ALERT_ENDED,  # ended, kept last
+    ]

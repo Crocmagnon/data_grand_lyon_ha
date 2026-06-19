@@ -1,6 +1,9 @@
 """Pure filtering and sorting functions for TCL passage data."""
 
-from .models import TclParkAndRide, TclPassage, TclStop
+from datetime import datetime
+from enum import IntEnum
+
+from .models import TclAlert, TclParkAndRide, TclPassage, TclStop
 
 
 def filter_tcl_passages_by_line(
@@ -53,3 +56,52 @@ def sort_tcl_passages_by_time(
 ) -> list[TclPassage]:
     """Sort passages by heure_passage ascending."""
     return sorted(passages, key=lambda p: p.heure_passage)
+
+
+class TclAlertRelevance(IntEnum):
+    """Relevance bucket of a TCL alert relative to a reference time.
+
+    Lower is more relevant, so it can be used directly as a sort key.
+    """
+
+    CURRENT = 0  # ongoing, or starting today (even if not started yet)
+    UPCOMING = 1  # starts on a later day
+    ENDED = 2  # already finished
+
+
+def tcl_alert_relevance(alert: TclAlert, now: datetime) -> TclAlertRelevance:
+    """Classify an alert by relevance relative to ``now`` (naive, local time)."""
+    if alert.fin < now:
+        return TclAlertRelevance.ENDED
+    if alert.debut <= now or alert.debut.date() == now.date():
+        return TclAlertRelevance.CURRENT
+    return TclAlertRelevance.UPCOMING
+
+
+def filter_tcl_alerts_by_line(alerts: list[TclAlert], ligne: str) -> list[TclAlert]:
+    """Keep only alerts for a given line (matched on its user-facing label)."""
+    return [a for a in alerts if a.ligne_cli == ligne]
+
+
+def filter_tcl_active_alerts(alerts: list[TclAlert], now: datetime) -> list[TclAlert]:
+    """Keep only alerts that are not over yet (ongoing or upcoming)."""
+    return [a for a in alerts if a.fin >= now]
+
+
+def sort_tcl_alerts_by_relevance(
+    alerts: list[TclAlert], now: datetime
+) -> list[TclAlert]:
+    """Sort alerts most-relevant-first.
+
+    Order: relevance bucket (current/today, upcoming, ended), then severity
+    (``niveau_severite`` ascending = more disruptive first), then start time.
+    Ended alerts are kept (placed last), not removed.
+    """
+    return sorted(
+        alerts,
+        key=lambda a: (
+            tcl_alert_relevance(a, now),
+            a.niveau_severite,
+            a.debut,
+        ),
+    )

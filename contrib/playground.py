@@ -2,15 +2,18 @@
 
 import asyncio
 import os
+from datetime import datetime
 
 import aiohttp
 
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    filter_tcl_alerts_by_line,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_stop,
     find_tcl_park_and_ride_by_id,
     find_velov_station_by_id,
+    sort_tcl_alerts_by_relevance,
     sort_tcl_passages_by_time,
 )
 from data_grand_lyon_ha.tcl import find_tcl_stop_by_id
@@ -72,6 +75,19 @@ async def main() -> None:
             print(f"  Horaires: {park.horaires}")
         else:
             print(f"  Park-and-ride {park_id} not found")
+
+        print()
+        alert_line = "27"
+        print(f"=== Alertes - Ligne {alert_line} ===")
+        all_alerts = await client.get_tcl_alerts()
+        print("Total alertes:", len(all_alerts))
+        alerts = filter_tcl_alerts_by_line(all_alerts, alert_line)
+        alerts = sort_tcl_alerts_by_relevance(alerts, datetime.now())
+        for a in alerts:
+            print(
+                f"  [{a.type}] {a.titre} | {a.mode} "
+                f"({a.debut:%d/%m %H:%M} → {a.fin:%d/%m %H:%M})"
+            )
 
 
 if __name__ == "__main__":

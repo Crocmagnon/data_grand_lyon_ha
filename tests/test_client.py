@@ -6,6 +6,9 @@ import pytest
 
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    TclAlert,
+    TclAlertSeverityType,
+    TclAlertType,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
@@ -203,6 +206,48 @@ SAMPLE_PARK_AND_RIDE_RESPONSE = {
 }
 
 
+SAMPLE_TCL_ALERTS_RESPONSE = {
+    "fields": [],
+    "nb_results": 2,
+    "values": [
+        {
+            "cause": "événement",
+            "debut": "2026-06-21 04:30:00",
+            "fin": "2026-06-22 01:30:00",
+            "last_update_fme": "2026-06-19 09:15:05",
+            "ligne_cli": "A",
+            "ligne_com": "A",
+            "listeobjet": "A",
+            "message": "Dans le cadre de la fête de la Musique...",
+            "mode": "Métro",
+            "n": 1,
+            "niveauseverite": 30,
+            "titre": "Fête de la Musique du 21/06",
+            "type": "Information",
+            "typeobjet": "line",
+            "typeseverite": "OTHER_EFFECT",
+        },
+        {
+            "cause": "travaux",
+            "debut": "2026-05-28 04:30:00",
+            "fin": "2026-07-26 02:30:00",
+            "last_update_fme": "2026-06-19 09:15:05",
+            "ligne_cli": "27",
+            "ligne_com": "27",
+            "listeobjet": "27",
+            "message": "Travaux sur la ligne 27.",
+            "mode": "Bus",
+            "n": 2,
+            "niveauseverite": 20,
+            "titre": "Travaux ligne 27",
+            "type": "Perturbation",
+            "typeobjet": "line",
+            "typeseverite": "SIGNIFICANT_DELAYS",
+        },
+    ],
+}
+
+
 def _make_client_with_response(response_json: dict) -> DataGrandLyonClient:
     mock_response = AsyncMock()
     mock_response.raise_for_status = MagicMock()
@@ -342,6 +387,34 @@ async def test_get_tcl_stops_desserte_parsed():
 
     assert stops[1].desserte == ["JD617", "JD621"]
     assert stops[2].desserte == ["204", "215", "JD473"]
+
+
+@pytest.mark.asyncio
+async def test_get_tcl_alerts_returns_all():
+    client = _make_client_with_response(SAMPLE_TCL_ALERTS_RESPONSE)
+    alerts = await client.get_tcl_alerts()
+
+    assert len(alerts) == 2
+    assert alerts[0] == TclAlert(
+        type=TclAlertType.INFORMATION,
+        cause="événement",
+        debut=datetime(2026, 6, 21, 4, 30, 0),
+        fin=datetime(2026, 6, 22, 1, 30, 0),
+        mode="Métro",
+        ligne_com="A",
+        ligne_cli="A",
+        titre="Fête de la Musique du 21/06",
+        message="Dans le cadre de la fête de la Musique...",
+        last_update_fme=datetime(2026, 6, 19, 9, 15, 5),
+        n=1,
+        type_severite=TclAlertSeverityType.OTHER_EFFECT,
+        niveau_severite=30,
+        type_objet="line",
+        liste_objet="A",
+    )
+    assert alerts[1].ligne_cli == "27"
+    assert alerts[1].type == TclAlertType.DISRUPTION
+    assert alerts[1].type_severite == TclAlertSeverityType.SIGNIFICANT_DELAYS
 
 
 @pytest.mark.asyncio

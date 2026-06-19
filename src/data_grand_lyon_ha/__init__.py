@@ -2,6 +2,9 @@
 
 from .client import DataGrandLyonClient
 from .models import (
+    TclAlert,
+    TclAlertSeverityType,
+    TclAlertType,
     TclParkAndRide,
     TclPassage,
     TclPassageType,
@@ -12,17 +15,26 @@ from .models import (
     VelovStationStatus,
 )
 from .tcl import (
+    TclAlertRelevance,
+    filter_tcl_active_alerts,
+    filter_tcl_alerts_by_line,
     filter_tcl_passages_by_line,
     filter_tcl_passages_by_lines_stops,
     filter_tcl_passages_by_stop,
     find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
+    sort_tcl_alerts_by_relevance,
     sort_tcl_passages_by_time,
+    tcl_alert_relevance,
 )
 from .velov import find_velov_station_by_id, find_velov_stations_by_ids
 
 __all__ = [
     "DataGrandLyonClient",
+    "TclAlert",
+    "TclAlertRelevance",
+    "TclAlertSeverityType",
+    "TclAlertType",
     "TclParkAndRide",
     "TclPassage",
     "TclPassageType",
@@ -31,6 +43,8 @@ __all__ = [
     "VelovBikeStandAvailability",
     "VelovStation",
     "VelovStationStatus",
+    "filter_tcl_active_alerts",
+    "filter_tcl_alerts_by_line",
     "filter_tcl_passages_by_line",
     "filter_tcl_passages_by_lines_stops",
     "filter_tcl_passages_by_stop",
@@ -38,5 +52,7 @@ __all__ = [
     "find_tcl_stop_by_id",
     "find_velov_station_by_id",
     "find_velov_stations_by_ids",
+    "sort_tcl_alerts_by_relevance",
     "sort_tcl_passages_by_time",
+    "tcl_alert_relevance",
 ]

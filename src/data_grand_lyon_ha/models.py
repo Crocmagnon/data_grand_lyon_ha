@@ -45,6 +45,46 @@ class TclStop:
     pmr: bool
 
 
+class TclAlertType(StrEnum):
+    """Type of a TCL traffic alert."""
+
+    DISRUPTION = "Perturbation"
+    INFORMATION = "Information"
+    LINE_INFORMATION = "Information ligne"
+
+
+class TclAlertSeverityType(StrEnum):
+    """Severity category of a TCL traffic alert."""
+
+    SIGNIFICANT_DELAYS = "SIGNIFICANT_DELAYS"
+    OTHER_EFFECT = "OTHER_EFFECT"
+
+
+@dataclass(frozen=True)
+class TclAlert:
+    """A single TCL traffic alert affecting a line.
+
+    Note: ``niveau_severite`` is *lower for more disruptive* alerts
+    (20 = disruption, 30 = information, 40 = line information).
+    """
+
+    type: TclAlertType
+    cause: str
+    debut: datetime
+    fin: datetime
+    mode: str
+    ligne_com: str
+    ligne_cli: str
+    titre: str
+    message: str
+    last_update_fme: datetime
+    n: int
+    type_severite: TclAlertSeverityType
+    niveau_severite: int
+    type_objet: str
+    liste_objet: str
+
+
 @dataclass(frozen=True)
 class TclParkAndRide:
     """A single TCL park-and-ride (P+R) facility with real-time availability."""
