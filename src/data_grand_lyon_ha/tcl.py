@@ -17,9 +17,7 @@ def filter_tcl_passages_by_stop(
     return [p for p in passages if p.id == stop_id]
 
 
-def find_tcl_stop_by_id(
-    stops: list[TclStop], stop_id: int
-) -> TclStop | None:
+def find_tcl_stop_by_id(stops: list[TclStop], stop_id: int) -> TclStop | None:
     """Find a stop by its ID, or return None if not found."""
     for stop in stops:
         if stop.id == stop_id:

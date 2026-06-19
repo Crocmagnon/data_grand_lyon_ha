@@ -84,7 +84,9 @@ class DataGrandLyonClient:
                 commune=v["commune"],
                 escalator=v["escalator"],
                 insee=v["insee"],
-                last_update=datetime.fromisoformat(v["last_update"]) if v["last_update"] else None,
+                last_update=datetime.fromisoformat(v["last_update"])
+                if v["last_update"]
+                else None,
                 lat=v["lat"],
                 lon=v["lon"],
                 nom=v["nom"],
@@ -113,8 +115,12 @@ class DataGrandLyonClient:
                 horaires=v["horaires"],
                 p_surv=v["p_surv"],
                 nb_tot_place_dispo=v["nb_tot_place_dispo"],
-                last_update=datetime.fromisoformat(v["last_update"]) if v["last_update"] else None,
-                last_update_fme=datetime.fromisoformat(v["last_update_fme"]) if v["last_update_fme"] else None,
+                last_update=datetime.fromisoformat(v["last_update"])
+                if v["last_update"]
+                else None,
+                last_update_fme=datetime.fromisoformat(v["last_update_fme"])
+                if v["last_update_fme"]
+                else None,
             )
             for v in data["values"]
         ]
@@ -122,9 +128,7 @@ class DataGrandLyonClient:
     async def get_velov_stations(self) -> list[VelovStation]:
         """Retrieve all Vélo'v stations from the API."""
         url = f"{self.BASE_URL}/jcd_jcdecaux.jcdvelov/all.json"
-        async with self._session.get(
-            url, params={"maxfeatures": "-1"}
-        ) as resp:
+        async with self._session.get(url, params={"maxfeatures": "-1"}) as resp:
             resp.raise_for_status()
             data = await resp.json()
 
@@ -145,7 +149,9 @@ class DataGrandLyonClient:
                     available_bikes=v["available_bikes"],
                     available_bike_stands=v["available_bike_stands"],
                     banking=v["banking"],
-                    last_update=datetime.fromisoformat(v["last_update"]) if v["last_update"] else None,
+                    last_update=datetime.fromisoformat(v["last_update"])
+                    if v["last_update"]
+                    else None,
                     total_stands=VelovBikeStandAvailability(
                         bikes=ts["availabilities"]["bikes"],
                         electrical_bikes=ts["availabilities"]["electricalBikes"],

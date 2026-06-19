@@ -15,7 +15,6 @@ from data_grand_lyon_ha import (
     VelovStation,
     VelovStationStatus,
 )
-from data_grand_lyon_ha.client import _parse_tcl_desserte
 
 SAMPLE_TCL_RESPONSE = {
     "fields": [],

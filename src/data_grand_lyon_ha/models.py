@@ -29,6 +29,7 @@ class TclPassage:
 @dataclass(frozen=True)
 class TclStop:
     """A single transit network stop."""
+
     id: int
     gid: int
     adresse: str

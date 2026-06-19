@@ -38,7 +38,9 @@ async def main() -> None:
         passages = filter_tcl_passages_by_stop(passages, arret)
         passages = sort_tcl_passages_by_time(passages)
         for p in passages:
-            print(f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M})")
+            print(
+                f"  {p.ligne} → {p.direction} | {p.delai_passage} ({p.heure_passage:%H:%M})"
+            )
 
         print()
         station_id = 10044
@@ -50,7 +52,9 @@ async def main() -> None:
             print(f"  Status: {station.status} | Availability: {station.availability}")
             print(f"  Bikes: {station.available_bikes}/{station.bike_stands}")
             ts = station.total_stands
-            print(f"  Detail: {ts.mechanical_bikes} mechanical, {ts.electrical_bikes} electrical")
+            print(
+                f"  Detail: {ts.mechanical_bikes} mechanical, {ts.electrical_bikes} electrical"
+            )
             print(f"  Free stands: {station.available_bike_stands}")
         else:
             print(f"  Station {station_id} not found")

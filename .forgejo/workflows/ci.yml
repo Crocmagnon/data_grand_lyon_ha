@@ -14,8 +14,8 @@ jobs:
 
       - uses: https://github.com/astral-sh/setup-uv@v8.0.0
 
-      - name: Run tests
-        run: uv run pytest
+      - name: Run checks
+        run: uvx prek run --all-files
 
       - name: Build package
         run: uv build
