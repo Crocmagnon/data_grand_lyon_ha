@@ -31,7 +31,7 @@ TCL_USERNAME=xxx TCL_PASSWORD=yyy uv run python contrib/playground.py
 - **src layout**: Source code lives in `src/data_grand_lyon_ha/`
 - **Build backend**: hatchling
 - **Package manager**: uv
-- **CI/CD**: Forgejo Actions (`.forgejo/workflows/ci.yml`)
+- **CI/CD**: GitHub Actions (`.github/workflows/ci.yml`), publishing to PyPI with trusted publishing
   - Tests run on every push to main and on PRs
   - Publishing to PyPI happens on `v*` tag push
 
